@@ -60,6 +60,7 @@ const MODES = {
 
 // Only sharp notes for simplicity in the new system.
 
+
 // Roman numerals for 7 scale degrees
 const MODE_ROMAN_NUMERALS = {
   Major: ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'],
@@ -72,6 +73,24 @@ const MODE_ROMAN_NUMERALS = {
   Melodic: ['i', 'ii', 'III', 'IV', 'V', 'vi°', 'vii°'],
   Locrian: ['i°', 'II', 'iii', 'iv', 'V', 'VI', 'VII']
 };
+
+// Valid key spellings per mode (used by updateKeyOptions and validation in update)
+const MODE_KEYS = {
+  Major: ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'],
+  Minor: ['C', 'C#', 'D', 'D#', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'],
+  Dorian: ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'Ab', 'A', 'Bb', 'B'],
+  Phrygian: ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'Bb', 'B'],
+  Lydian: ['C', 'D', 'Db', 'E', 'Eb', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'],
+  Mixolydian: ['C', 'D', 'E', 'F', 'F#', 'G', 'A', 'A#', 'B', 'Bb', 'C#', 'D#', 'G#'],
+  Locrian: ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B', 'Bb'],
+  Harmonic: ['C', 'C#', 'D', 'D#', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'],
+  Melodic: ['C', 'C#', 'D', 'D#', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'],
+};
+
+function isKeyValidForMode(baseKey, mode) {
+  const list = MODE_KEYS[mode] || [];
+  return list.includes(baseKey);
+}
 
 const KEY_BACKGROUNDS = {
   'C': '#8BEB83',
@@ -170,7 +189,7 @@ wrap.innerHTML = `
       aria-pressed="true">Triads</button>
     <button type="button" data-chord-type="seventh"
       class="chord-type-btn segment"
-      aria-pressed="false">7ths</button>
+      aria-pressed="false">Sevenths</button>
   </div>
 `;
 
@@ -466,6 +485,25 @@ function renderKeys(scaleIDs = [], chordIDs = [], nOctaves = 2, offset = 0, high
 function update() {
   const baseKey = selectedKey.slice(0, -1);
   const octave = selectedKey.slice(-1);
+  // If current key isn't valid for the active mode, clear UI and wait for a valid selection
+  if (!isKeyValidForMode(baseKey, selectedMode)) {
+    // Clear piano SVG layers
+    const svg = document.getElementById('pianoSvg');
+    svg?.querySelector('.white-keys') && (svg.querySelector('.white-keys').innerHTML = '');
+    svg?.querySelector('.black-keys') && (svg.querySelector('.black-keys').innerHTML = '');
+    // Clear displays
+    scaleDisplay.innerHTML = '';
+    const romanDisplay = document.getElementById('roman-display');
+    if (romanDisplay) romanDisplay.innerHTML = '';
+    const chordDisplay = document.getElementById('active_chord');
+    if (chordDisplay) chordDisplay.textContent = '';
+    if (chordNotesDiv) chordNotesDiv.textContent = '';
+    // Reset chord state and hide chord UI
+    baseChordIDs = [];
+    currentChord = [];
+    updateChordVisibility();
+    return; // do not render anything until a valid key is chosen
+  }
   const fullKey = baseKey + octave;
   const mapped = NOTE_MAP[fullKey];
   if (typeof mapped === 'undefined') {
@@ -515,15 +553,15 @@ function update() {
     // Find index of scale note in current scale
     const index = scaleIDs.indexOf(noteId);
     if (index === -1) return;
-  // Chord logic: triad (3) or seventh (4) from this scale degree
-const size = getChordSize();
-const chordIDs = buildChordIDs(scaleIDs, index, size);
-baseChordIDs = chordIDs;
-currentInversion = 0;
-currentChord = chordIDs.map(id => ID_TO_NOTE[id]);
-updateChordVisibility();
-renderInversionButtons(size);
-setActiveInversion(0); // handles rendering and note labels
+    // Chord logic: triad (3) or seventh (4) from this scale degree
+    const size = getChordSize();
+    const chordIDs = buildChordIDs(scaleIDs, index, size);
+    baseChordIDs = chordIDs;
+    currentInversion = 0;
+    currentChord = chordIDs.map(id => ID_TO_NOTE[id]);
+    updateChordVisibility();
+    renderInversionButtons(size);
+    setActiveInversion(0); // handles rendering and note labels
     const roman = MODE_ROMAN_NUMERALS[selectedMode]?.[index % 7] || '';
     let quality = '';
     if (roman.includes('°')) quality = 'Diminished';
@@ -616,18 +654,6 @@ function populateModesOnce() {
 function updateKeyOptions(mode) {
   keySelect.innerHTML = '';
   // Only show keys relevant to the selected mode, using MODE_KEYS if defined
-  const MODE_KEYS = {
-    Major: ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'],
-    Minor: ['C', 'C#', 'D', 'D#', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'],
-    Dorian: ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'Ab', 'A', 'Bb', 'B'],
-    Phrygian: ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'Bb', 'B'],
-    Lydian: ['C', 'D', 'Db', 'E', 'Eb', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'],
-    Mixolydian: ['C', 'D', 'E', 'F', 'F#', 'G', 'A', 'A#', 'B', 'Bb', 'C#', 'D#', 'G#'],
-    Locrian: ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B', 'Bb'],
-    Harmonic: ['C', 'C#', 'D', 'D#', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'],
-    Melodic: ['C', 'C#', 'D', 'D#', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'],
-
-  };
   const validKeys = MODE_KEYS[selectedMode] || [];
   validKeys.forEach(base => {
     // Prefer flat enharmonic match if base includes 'b'
