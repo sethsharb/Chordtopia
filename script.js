@@ -9,10 +9,10 @@ const ENHARMONIC_MAP = {
   'F♯': 'G♭', 'G♭': 'F♯',
   'G♯': 'A♭', 'A♭': 'G♯',
   'A♯': 'B♭', 'B♭': 'A♯',
-  'E♯': 'F',  'F': 'E♯',
-  'F♭': 'E',  'E': 'F♭',
-  'C♭': 'B',  'B': 'C♭',
-  'B♯': 'C',  'C': 'B♯'
+  'E♯': 'F', 'F': 'E♯',
+  'F♭': 'E', 'E': 'F♭',
+  'C♭': 'B', 'B': 'C♭',
+  'B♯': 'C', 'C': 'B♯'
 };
 
 function getNoteLetter(n) {
@@ -77,25 +77,25 @@ const MODE_ROMAN_NUMERALS = {
   Harmonic: ['i', 'ii°', 'III+', 'iv', 'V', 'VI', 'vii°'],
   Melodic: ['i', 'ii', 'III', 'IV', 'V', 'vi°', 'vii°'],
   Locrian: ['i°', 'II', 'iii', 'iv', 'V', 'VI', 'VII']
-}; 
+};
 
 // --- Chord quality interval dictionaries (root-relative, in semitones) ---
 const TRIAD_INTERVALS = {
-  Major:      [0, 4, 7],
-  Minor:      [0, 3, 7],
+  Major: [0, 4, 7],
+  Minor: [0, 3, 7],
   Diminished: [0, 3, 6],
-  Augmented:  [0, 4, 8],
+  Augmented: [0, 4, 8],
 };
 
 const SEVENTH_INTERVALS = {
   // common sevenths; kept here for future-proofing (search uses triad/7th intervals generically)
-  Major7:         [0, 4, 7, 11],
-  Dominant7:      [0, 4, 7, 10],
-  Minor7:         [0, 3, 7, 10],
+  Major7: [0, 4, 7, 11],
+  Dominant7: [0, 4, 7, 10],
+  Minor7: [0, 3, 7, 10],
   HalfDiminished: [0, 3, 6, 10], // m7b5 / ø7
-  Diminished7:    [0, 3, 6, 9],  // °7
-  AugmentedMaj7:  [0, 4, 8, 11], // +maj7
-  Augmented7:     [0, 4, 8, 10], // +7
+  Diminished7: [0, 3, 6, 9],  // °7
+  AugmentedMaj7: [0, 4, 8, 11], // +maj7
+  Augmented7: [0, 4, 8, 10], // +7
 };
 
 // Convert a list of absolute note IDs to root-relative semitone intervals (0..11)
@@ -320,7 +320,7 @@ function renderChordNoteLabels(noteNames) {
       : (ENHARMONIC_MAP[base] && scaleSet.has(ENHARMONIC_MAP[base]))
         ? ENHARMONIC_MAP[base]
         : base;
-return `<div class="chord-note">${supAcc(disp)}</div>`;
+    return `<div class="chord-note">${supAcc(disp)}</div>`;
   }).join('');
 }
 
@@ -531,9 +531,9 @@ function renderChordSearchUI() {
       }, 0);
 
       results.innerHTML = matches.map(m => {
-  const tag = `${supAcc(m.key)} ${m.mode} — ${m.roman}`;
-  return `<button type="button" class="chord-match" data-key="${m.key}" data-mode="${m.mode}" data-degree="${m.degree}">${tag}</button>`;
-}).join('');
+        const tag = `${supAcc(m.key)} ${m.mode} — ${m.roman}`;
+        return `<button type="button" class="chord-match" data-key="${m.key}" data-mode="${m.mode}" data-degree="${m.degree}">${tag}</button>`;
+      }).join('');
       results.querySelectorAll('.chord-match').forEach(b => {
         Object.assign(b.style, {
           display: 'block',
@@ -665,46 +665,46 @@ function switchToKeyModeAndDegree(base, mode, degree, preservedChordIDs = null, 
   update();
 
   // After update(), mark the degree and set the chord by transposition (keep quality)
-const sel = `#scale-display .scale-note[data-degree="${degree}"]`;
-const el = document.querySelector(sel);
-document.querySelectorAll('#scale-display .scale-note').forEach(n => n.classList.remove('active'));
-if (el) el.classList.add('active');
+  const sel = `#scale-display .scale-note[data-degree="${degree}"]`;
+  const el = document.querySelector(sel);
+  document.querySelectorAll('#scale-display .scale-note').forEach(n => n.classList.remove('active'));
+  if (el) el.classList.add('active');
 
-const targetRootId = Array.isArray(scaleIDs) && scaleIDs.length ? scaleIDs[degree] : null;
-const size = getChordSize();
+  const targetRootId = Array.isArray(scaleIDs) && scaleIDs.length ? scaleIDs[degree] : null;
+  const size = getChordSize();
 
-if (preservedChordIDs && preservedChordIDs.length >= 3 && targetRootId != null) {
-  // Keep the exact interval structure: transpose root-position chord to the new root
-  const oldRootId = preservedChordIDs[0];
-  baseChordIDs = transposeChordIDs(preservedChordIDs.slice(0, size), oldRootId, targetRootId);
-  baseChordIDs = baseChordIDs.slice(0, size);
-} else {
-  // Fallback: diatonic build (only if we have nothing preserved)
-  baseChordIDs = (Array.isArray(scaleIDs) && scaleIDs.length >= 7)
-    ? buildChordIDs(scaleIDs, degree, size)
-    : [];
+  if (preservedChordIDs && preservedChordIDs.length >= 3 && targetRootId != null) {
+    // Keep the exact interval structure: transpose root-position chord to the new root
+    const oldRootId = preservedChordIDs[0];
+    baseChordIDs = transposeChordIDs(preservedChordIDs.slice(0, size), oldRootId, targetRootId);
     baseChordIDs = baseChordIDs.slice(0, size);
-}
-
-currentInversion = 0;
-renderInversionButtons(size);
-setActiveInversion(0);
-updateChordVisibility();
-
-const chordDisplay = document.getElementById('active_chord');
-if (chordDisplay) {
-  if (typeof preservedLabel === 'string' && preservedLabel.trim()) {
-    chordDisplay.innerHTML = supAcc(preservedLabel.trim());
-  } else if (baseChordIDs.length) {
-    const rootName = (ID_TO_NOTE[baseChordIDs[0]] || '').replace(/\d+$/, '');
-    const intervals = idsToIntervals(baseChordIDs);
-    const inferred = classifyTriad(intervals) || '';
-    const disp = getDisplaySpelling(rootName);
-    chordDisplay.innerHTML = inferred ? `${supAcc(disp)} ${inferred}` : supAcc(disp);
   } else {
-    chordDisplay.innerHTML = '';
+    // Fallback: diatonic build (only if we have nothing preserved)
+    baseChordIDs = (Array.isArray(scaleIDs) && scaleIDs.length >= 7)
+      ? buildChordIDs(scaleIDs, degree, size)
+      : [];
+    baseChordIDs = baseChordIDs.slice(0, size);
   }
-}
+
+  currentInversion = 0;
+  renderInversionButtons(size);
+  setActiveInversion(0);
+  updateChordVisibility();
+
+  const chordDisplay = document.getElementById('active_chord');
+  if (chordDisplay) {
+    if (typeof preservedLabel === 'string' && preservedLabel.trim()) {
+      chordDisplay.innerHTML = supAcc(preservedLabel.trim());
+    } else if (baseChordIDs.length) {
+      const rootName = (ID_TO_NOTE[baseChordIDs[0]] || '').replace(/\d+$/, '');
+      const intervals = idsToIntervals(baseChordIDs);
+      const inferred = classifyTriad(intervals) || '';
+      const disp = getDisplaySpelling(rootName);
+      chordDisplay.innerHTML = inferred ? `${supAcc(disp)} ${inferred}` : supAcc(disp);
+    } else {
+      chordDisplay.innerHTML = '';
+    }
+  }
 }
 
 const keySelect = document.getElementById('key-select');
@@ -947,7 +947,7 @@ function update() {
   renderKeys(scaleIDs, [], 3, 0, false);
   // Render scale display using adjustedScale
   scaleDisplay.innerHTML = adjustedScale.slice(0, 7).map((note, i) =>
-  `<span class="scale-note" data-note-id="${scaleIDs[i]}" data-degree="${i}">${supAcc(note)}</span>`
+    `<span class="scale-note" data-note-id="${scaleIDs[i]}" data-degree="${i}">${supAcc(note)}</span>`
   ).join('');
   // Render roman numerals
   const romanDisplay = document.getElementById('roman-display');
@@ -987,7 +987,7 @@ function update() {
     resetChordSearchUI();             // <-- add this
     renderInversionButtons(size);
     setActiveInversion(0); // handles rendering and note labels
-     const roman = MODE_ROMAN_NUMERALS[selectedMode]?.[index % 7] || '';
+    const roman = MODE_ROMAN_NUMERALS[selectedMode]?.[index % 7] || '';
     let quality = qualityFromRoman(roman);
     if (!quality) {
       const intervals = idsToIntervals(baseChordIDs);
@@ -995,20 +995,20 @@ function update() {
     }
     const chordDisplay = document.getElementById('active_chord');
     // Strip octave from note for display (replace digit with empty string)
-   if (chordDisplay && note) {
-  const base = note.replace(/\d+$/, '');
-  chordDisplay.innerHTML = `${supAcc(getDisplaySpelling(base))} ${quality}`;
-}
+    if (chordDisplay && note) {
+      const base = note.replace(/\d+$/, '');
+      chordDisplay.innerHTML = `${supAcc(getDisplaySpelling(base))} ${quality}`;
+    }
     // Re-render roman numerals (already done above but safe to include)
     romanDisplay.innerHTML = romanNumerals.map(n => `<span>${n}</span>`).join('');
   };
   const controls = document.querySelector('.controls');
   const activeDisplay = document.getElementById('active_mode-key');
   if (activeDisplay) {
-  if (typeof selectedKey === 'string') {
-    activeDisplay.innerHTML = `${supAcc(baseKey)} ${selectedMode} ›`;
+    if (typeof selectedKey === 'string') {
+      activeDisplay.innerHTML = `${supAcc(baseKey)} ${selectedMode} ›`;
+    }
   }
-}
 }
 
 
