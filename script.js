@@ -72,7 +72,63 @@ const MODE_ROMAN_NUMERALS = {
   Harmonic: ['i', 'ii°', 'III+', 'iv', 'V', 'VI', 'vii°'],
   Melodic: ['i', 'ii', 'III', 'IV', 'V', 'vi°', 'vii°'],
   Locrian: ['i°', 'II', 'iii', 'iv', 'V', 'VI', 'VII']
+}; 
+
+// --- Chord quality interval dictionaries (root-relative, in semitones) ---
+const TRIAD_INTERVALS = {
+  Major:      [0, 4, 7],
+  Minor:      [0, 3, 7],
+  Diminished: [0, 3, 6],
+  Augmented:  [0, 4, 8],
 };
+
+const SEVENTH_INTERVALS = {
+  // common sevenths; kept here for future-proofing (search uses triad/7th intervals generically)
+  Major7:         [0, 4, 7, 11],
+  Dominant7:      [0, 4, 7, 10],
+  Minor7:         [0, 3, 7, 10],
+  HalfDiminished: [0, 3, 6, 10], // m7b5 / ø7
+  Diminished7:    [0, 3, 6, 9],  // °7
+  AugmentedMaj7:  [0, 4, 8, 11], // +maj7
+  Augmented7:     [0, 4, 8, 10], // +7
+};
+
+// Convert a list of absolute note IDs to root-relative semitone intervals (0..11)
+function idsToIntervals(ids) {
+  if (!Array.isArray(ids) || !ids.length) return [];
+  const pcs = ids.map(id => {
+    const name = ID_TO_NOTE[id];
+    if (!name) return null;
+    const base = name.replace(/\d+$/, '');
+    let pc = NOTE_NAMES.indexOf(base);
+    if (pc === -1 && ENHARMONIC_MAP[base]) pc = NOTE_NAMES.indexOf(ENHARMONIC_MAP[base]);
+    return pc;
+  }).filter(v => v != null);
+  if (!pcs.length) return [];
+  const root = pcs[0];
+  const rel = pcs.map(pc => (pc - root + 12) % 12);
+  return Array.from(new Set(rel)).sort((a, b) => a - b);
+}
+
+// Build expected intervals for a diatonic chord from scale pitch classes
+function scaleIntervalsAtDegree(scalePCs, degree, chordSize) {
+  const steps = chordSize === 4 ? [0, 2, 4, 6] : [0, 2, 4];
+  const pcs = steps.map(s => scalePCs[(degree + s) % 7]);
+  const root = pcs[0];
+  const rel = pcs.map(pc => (pc - root + 12) % 12);
+  return Array.from(new Set(rel)).sort((a, b) => a - b);
+}
+
+// Try to classify a triad's quality from its intervals
+function classifyTriad(intervals) {
+  const dict = {
+    [JSON.stringify(TRIAD_INTERVALS.Major)]: 'Major',
+    [JSON.stringify(TRIAD_INTERVALS.Minor)]: 'Minor',
+    [JSON.stringify(TRIAD_INTERVALS.Diminished)]: 'Diminished',
+    [JSON.stringify(TRIAD_INTERVALS.Augmented)]: 'Augmented',
+  };
+  return dict[JSON.stringify(intervals)] || '';
+}
 
 // Valid key spellings per mode (used by updateKeyOptions and validation in update)
 const MODE_KEYS = {
@@ -266,7 +322,17 @@ function getDisplaySpelling(base) {
   const enh = ENHARMONIC_MAP[base];
   return (enh && scaleSet.has(enh)) ? enh : base;
 }
-
+function qualityFromRoman(roman) {
+  if (roman) {
+    if (roman.includes('°')) return 'Diminished';
+    if (roman.includes('+')) return 'Augmented';
+    return roman === roman.toUpperCase() ? 'Major' : 'Minor';
+  }
+  // Fallback: infer from currently selected/visible chord intervals
+  const intervals = idsToIntervals(baseChordIDs);
+  const triadGuess = classifyTriad(intervals);
+  return triadGuess || '';
+}
 // --- Pitch-class helpers for chord search ---
 function stripOctave(n) {
   return (n || '').replace(/\d+$/, '');
@@ -331,6 +397,8 @@ function updateChordVisibility() {
 function resetChordDisplay() {
   currentChord = [];
   activeScaleNote = null;
+  baseChordIDs = [];
+  lastClickedScaleId = null;
   chordNotesDiv.textContent = '';
   const chordDisplay = document.getElementById('active_chord');
   if (chordDisplay) chordDisplay.textContent = '';
@@ -357,14 +425,14 @@ function renderChordSearchUI() {
   </div>
 `;
 
-// Create (or reuse) a fixed-position portal so results float above the SVG piano
-let resultsPortal = document.getElementById('chord-search-results');
-if (!resultsPortal) {
-  resultsPortal = document.createElement('div');
-  resultsPortal.id = 'chord-search-results';
-  resultsPortal.className = 'chord-search-popover';
-  document.body.appendChild(resultsPortal);
-}
+  // Create (or reuse) a fixed-position portal so results float above the SVG piano
+  let resultsPortal = document.getElementById('chord-search-results');
+  if (!resultsPortal) {
+    resultsPortal = document.createElement('div');
+    resultsPortal.id = 'chord-search-results';
+    resultsPortal.className = 'chord-search-popover';
+    document.body.appendChild(resultsPortal);
+  }
 
   // Insert directly below the active chord display, if present
   const activeChordEl = document.getElementById('active_chord');
@@ -374,140 +442,180 @@ if (!resultsPortal) {
     footer.appendChild(wrap);
   }
 
-const btn = wrap.querySelector('#chord-search-btn');
-const results = document.getElementById('chord-search-results');
-const summary = wrap.querySelector('#chord-search-summary');
+  const btn = wrap.querySelector('#chord-search-btn');
+  const results = document.getElementById('chord-search-results');
+  const summary = wrap.querySelector('#chord-search-summary');
 
   btn.addEventListener('click', () => {
-  const matches = findChordInOtherKeys();
-  results.innerHTML = '';
+    const matches = findChordInOtherKeys();
+    results.innerHTML = '';
 
-  // Position the fixed popover near the button
-// Position values sent to CSS via custom properties
-const rect = btn.getBoundingClientRect();
-const viewportPadding = 8;
+    // Position the fixed popover near the button
+    // Position values sent to CSS via custom properties
+    const rect = btn.getBoundingClientRect();
+    const viewportPadding = 8;
 
-// Width & height constraints
-const minWidth = Math.max(260, rect.width);
-const width = Math.min(minWidth, window.innerWidth - 2 * viewportPadding);
-const maxH = window.innerHeight - 2 * viewportPadding;
+    // Width & height constraints
+    const minWidth = Math.max(260, rect.width);
+    const width = Math.min(minWidth, window.innerWidth - 2 * viewportPadding);
+    const maxH = window.innerHeight - 2 * viewportPadding;
 
-// Temporarily open to measure height
-results.classList.add('is-open');
-results.style.setProperty('--popover-width', width + 'px');
-results.style.setProperty('--popover-maxh', maxH + 'px');
+    // Temporarily open to measure height
+    results.classList.add('is-open');
+    results.style.setProperty('--popover-width', width + 'px');
+    results.style.setProperty('--popover-maxh', maxH + 'px');
 
-// Measure content and choose above/below
-const contentH = Math.min(results.scrollHeight, maxH);
-let top = rect.bottom + 6;
-if (top + contentH > window.innerHeight - viewportPadding) {
-  top = Math.max(viewportPadding, rect.top - contentH - 6);
-}
+    // Measure content and choose above/below
+    const contentH = Math.min(results.scrollHeight, maxH);
+    let top = rect.bottom + 6;
+    if (top + contentH > window.innerHeight - viewportPadding) {
+      top = Math.max(viewportPadding, rect.top - contentH - 6);
+    }
 
-// Right-anchored distance
-const right = Math.max(viewportPadding, window.innerWidth - rect.right - 6);
+    // Right-anchored distance
+    const right = Math.max(viewportPadding, window.innerWidth - rect.right - 6);
 
-// Send computed values to CSS
-results.style.setProperty('--popover-top', top + 'px');
-results.style.setProperty('--popover-right', right + 'px');
+    // Send computed values to CSS
+    results.style.setProperty('--popover-top', top + 'px');
+    results.style.setProperty('--popover-right', right + 'px');
     if (!matches.length) {
       summary.textContent = 'No matches found in other keys/modes.';
       results.style.display = 'none';
       return;
     }
     // Temporarily disable pointer events on the piano so the popover can be interacted with
-const pianoContainer = document.getElementById('pianoSvgContainer');
-if (pianoContainer) pianoContainer.style.pointerEvents = 'none';
-const onResize = () => {
-  const rect2 = btn.getBoundingClientRect();
-  const width2 = Math.min(Math.max(260, rect2.width), window.innerWidth - 2 * viewportPadding);
-  const maxH2 = window.innerHeight - 2 * viewportPadding;
-  const contentH2 = Math.min(results.scrollHeight, maxH2);
-  let top2 = rect2.bottom + 6;
-  if (top2 + contentH2 > window.innerHeight - viewportPadding) {
-    top2 = Math.max(viewportPadding, rect2.top - contentH2 - 6);
-  }
-  const right2 = Math.max(viewportPadding, window.innerWidth - rect2.right - 6);
-  results.style.setProperty('--popover-width', width2 + 'px');
-  results.style.setProperty('--popover-maxh', maxH2 + 'px');
-  results.style.setProperty('--popover-top', top2 + 'px');
-  results.style.setProperty('--popover-right', right2 + 'px');
-};
-const hide = (ev) => {
-  if (ev && (results.contains(ev.target) || btn.contains(ev.target))) return;
-  results.classList.remove('is-open');
-  if (pianoContainer) pianoContainer.style.pointerEvents = '';
-  window.removeEventListener('scroll', hide, true);
-  window.removeEventListener('resize', hide, true);
-  document.removeEventListener('mousedown', hide, true);
-};
-// Bind listeners after showing
-setTimeout(() => {
-  window.addEventListener('scroll', hide, true);
-window.addEventListener('resize', onResize, true);
-  document.addEventListener('mousedown', hide, true);
-}, 0);
+    const pianoContainer = document.getElementById('pianoSvgContainer');
+    if (pianoContainer) pianoContainer.style.pointerEvents = 'none';
+    const onResize = () => {
+      const rect2 = btn.getBoundingClientRect();
+      const width2 = Math.min(Math.max(260, rect2.width), window.innerWidth - 2 * viewportPadding);
+      const maxH2 = window.innerHeight - 2 * viewportPadding;
+      const contentH2 = Math.min(results.scrollHeight, maxH2);
+      let top2 = rect2.bottom + 6;
+      if (top2 + contentH2 > window.innerHeight - viewportPadding) {
+        top2 = Math.max(viewportPadding, rect2.top - contentH2 - 6);
+      }
+      const right2 = Math.max(viewportPadding, window.innerWidth - rect2.right - 6);
+      results.style.setProperty('--popover-width', width2 + 'px');
+      results.style.setProperty('--popover-maxh', maxH2 + 'px');
+      results.style.setProperty('--popover-top', top2 + 'px');
+      results.style.setProperty('--popover-right', right2 + 'px');
+    };
+    const hide = (ev) => {
+      if (ev && (results.contains(ev.target) || btn.contains(ev.target))) return;
+      results.classList.remove('is-open');
+      if (pianoContainer) pianoContainer.style.pointerEvents = '';
+      window.removeEventListener('scroll', hide, true);
+      window.removeEventListener('resize', hide, true);
+      document.removeEventListener('mousedown', hide, true);
+    };
+    // Bind listeners after showing
+    setTimeout(() => {
+      window.addEventListener('scroll', hide, true);
+      window.addEventListener('resize', onResize, true);
+      document.addEventListener('mousedown', hide, true);
+    }, 0);
 
     results.innerHTML = matches.map(m => {
       const tag = `${m.key} ${m.mode} — ${m.roman}`;
       return `<button type="button" class="chord-match" data-key="${m.key}" data-mode="${m.mode}" data-degree="${m.degree}">${tag}</button>`;
     }).join('');
     results.querySelectorAll('.chord-match').forEach(b => {
-  Object.assign(b.style, {
-    display: 'block',
-    width: '100%',
-    textAlign: 'center',
-    padding: '8px 10px',
-    borderRadius: '8px',
-    border: '1px solid rgba(255,255,255,.12)',
-    background: 'transparent',
-    color: 'white',
-    cursor: 'pointer'
-  });
-  b.addEventListener('mouseenter', () => b.style.background = 'rgba(255,255,255,.08)');
-  b.addEventListener('mouseleave', () => b.style.background = 'transparent');
-});
+      Object.assign(b.style, {
+        display: 'block',
+        width: '100%',
+        textAlign: 'center',
+        padding: '8px 10px',
+        borderRadius: '8px',
+        border: '1px solid rgba(255,255,255,.12)',
+        background: 'transparent',
+        color: 'white',
+        cursor: 'pointer'
+      });
+      b.addEventListener('mouseenter', () => b.style.background = 'rgba(255,255,255,.08)');
+      b.addEventListener('mouseleave', () => b.style.background = 'transparent');
+    });
 
     results.querySelectorAll('.chord-match').forEach(btn => {
       btn.addEventListener('click', () => {
         const base = btn.dataset.key;
         const mode = btn.dataset.mode;
         const degree = parseInt(btn.dataset.degree, 10) || 0;
-        switchToKeyModeAndDegree(base, mode, degree);
+        const preserved = baseChordIDs ? baseChordIDs.slice() : null;
+const labelEl = document.getElementById('active_chord');
+const preservedLabel = labelEl ? labelEl.textContent : null;
+switchToKeyModeAndDegree(base, mode, degree, preserved, preservedLabel);
       });
     });
   });
 }
-
+// Transpose a chord by mapping its root ID to a new root ID, preserving semitone intervals
+function transposeChordIDs(ids, oldRootId, newRootId) {
+  if (!Array.isArray(ids) || ids.length === 0) return [];
+  const delta = newRootId - oldRootId;
+  const keys = Object.keys(ID_TO_NOTE).map(Number);
+  const minId = Math.min(...keys);
+  const maxId = Math.max(...keys);
+  return ids.map((id) => {
+    let next = id + delta;
+    // wrap by octaves so we keep all notes
+    while (next < minId) next += 12;
+    while (next > maxId) next -= 12;
+    return next;
+  });
+}
 function findChordInOtherKeys() {
   if (!Array.isArray(baseChordIDs) || baseChordIDs.length < 3) return [];
 
-  const target = chordIDsToPitchClasses(baseChordIDs); // uses root-position chord
-  const size = getChordSize();
+  const size = getChordSize(); // 3 or 4
+  // Always compute against the exact active chord size
+  const targetIntervals = idsToIntervals(baseChordIDs.slice(0, size));
+  const targetPCs = chordIDsToPitchClasses(baseChordIDs.slice(0, size));
+  if (!targetIntervals.length || targetPCs.length !== size) return [];
+
+  // Determine the displayed root letter of the current chord (respects current key/mode spelling)
+  const targetRootDisplay = getDisplaySpelling((ID_TO_NOTE[baseChordIDs[0]] || '').replace(/\d+$/, ''));
+  const targetRootLetter = getNoteLetter(targetRootDisplay);
+
   const out = [];
+
   for (const mode of Object.keys(MODES)) {
     const keys = MODE_KEYS[mode] || [];
     for (const base of keys) {
-      // Skip the currently selected key/mode pair
       const currentBase = selectedKey ? selectedKey.slice(0, -1) : '';
       if (mode === selectedMode && base === currentBase) continue;
 
       const scalePCs = getScalePitchClasses(base, mode);
-      if (scalePCs.some(pc => pc === -1)) continue; // invalid scale
+      if (!Array.isArray(scalePCs) || scalePCs.length !== 7 || scalePCs.some(pc => pc === -1)) continue; // invalid scale
+
       for (let degree = 0; degree < 7; degree++) {
-        const pcs = chordPitchClassesFromScale(scalePCs, degree, size);
-        if (samePCSet(target, pcs)) {
-          const roman = MODE_ROMAN_NUMERALS[mode]?.[degree] || '';
-          out.push({ mode, key: base, degree, roman });
-        }
+        // Candidate intervals at this degree must match (handles inversions)
+        const candIntervals = scaleIntervalsAtDegree(scalePCs, degree, size);
+        if (JSON.stringify(candIntervals) !== JSON.stringify(targetIntervals)) continue;
+
+        // Candidate exact PC set must match the searched chord (root specificity)
+        const candPCs = chordPitchClassesFromScale(scalePCs, degree, size);
+        if (!Array.isArray(candPCs) || candPCs.length !== size) continue;
+        if (!samePCSet(candPCs, targetPCs)) continue;
+
+        // Enharmonic spelling guard: displayed root LETTER must match (e.g., Eb vs D#)
+        const candScaleRaw = getScaleNotes(base, mode) || [];          // 7 base note names (no octaves)
+        const candAdjusted = adjustEnharmonics(candScaleRaw, base) || candScaleRaw;
+        const degIdx = degree % 7;
+        const candRootName = (candAdjusted[degIdx] || candScaleRaw[degIdx] || '');
+        if (!candRootName) continue; // safety
+        const candRootLetter = getNoteLetter(candRootName);
+        if (candRootLetter !== targetRootLetter) continue;
+
+        const roman = MODE_ROMAN_NUMERALS[mode]?.[degIdx] || '';
+        out.push({ mode, key: base, degree, roman });
       }
     }
   }
   return out;
 }
 
-function switchToKeyModeAndDegree(base, mode, degree) {
-  // Set mode first (rebuilds key options)
+function switchToKeyModeAndDegree(base, mode, degree, preservedChordIDs = null, preservedLabel = null) {  // Set mode first (rebuilds key options)
   selectedMode = mode;
   updateKeyOptions(mode);
 
@@ -541,33 +649,46 @@ function switchToKeyModeAndDegree(base, mode, degree) {
   resetChordDisplay(); // keeps chordType (triad/7th) as-is
   update();
 
-  // Programmatically activate the selected degree to show the chord
-  // Wait a frame so #scale-display is rebuilt, then click.
-  const activateDegree = () => {
-    const sel = `#scale-display .scale-note[data-degree="${degree}"]`;
-    const el = document.querySelector(sel);
-    if (el) {
-      // Ensure we don't treat this as a "second click" toggle
-      lastClickedScaleNote = null;
-      lastClickedScaleId = null;
-      el.click();
-    } else {
-      // Retry shortly if render is late
-      setTimeout(() => {
-        const el2 = document.querySelector(sel);
-        if (el2) {
-          lastClickedScaleNote = null;
-          lastClickedScaleId = null;
-          el2.click();
-        }
-      }, 0);
-    }
-  };
-  if (typeof requestAnimationFrame === 'function') {
-    requestAnimationFrame(activateDegree);
+  // After update(), mark the degree and set the chord by transposition (keep quality)
+const sel = `#scale-display .scale-note[data-degree="${degree}"]`;
+const el = document.querySelector(sel);
+document.querySelectorAll('#scale-display .scale-note').forEach(n => n.classList.remove('active'));
+if (el) el.classList.add('active');
+
+const targetRootId = Array.isArray(scaleIDs) && scaleIDs.length ? scaleIDs[degree] : null;
+const size = getChordSize();
+
+if (preservedChordIDs && preservedChordIDs.length >= 3 && targetRootId != null) {
+  // Keep the exact interval structure: transpose root-position chord to the new root
+  const oldRootId = preservedChordIDs[0];
+  baseChordIDs = transposeChordIDs(preservedChordIDs.slice(0, size), oldRootId, targetRootId);
+  baseChordIDs = baseChordIDs.slice(0, size);
+} else {
+  // Fallback: diatonic build (only if we have nothing preserved)
+  baseChordIDs = (Array.isArray(scaleIDs) && scaleIDs.length >= 7)
+    ? buildChordIDs(scaleIDs, degree, size)
+    : [];
+    baseChordIDs = baseChordIDs.slice(0, size);
+}
+
+currentInversion = 0;
+renderInversionButtons(size);
+setActiveInversion(0);
+updateChordVisibility();
+
+const chordDisplay = document.getElementById('active_chord');
+if (chordDisplay) {
+  if (typeof preservedLabel === 'string' && preservedLabel.trim()) {
+    chordDisplay.textContent = preservedLabel.trim();
+  } else if (baseChordIDs.length) {
+    const rootName = (ID_TO_NOTE[baseChordIDs[0]] || '').replace(/\d+$/, '');
+    const intervals = idsToIntervals(baseChordIDs);
+    const inferred = classifyTriad(intervals) || '';
+    chordDisplay.textContent = inferred ? `${getDisplaySpelling(rootName)} ${inferred}` : getDisplaySpelling(rootName);
   } else {
-    setTimeout(activateDegree, 0);
+    chordDisplay.textContent = '';
   }
+}
 }
 
 const keySelect = document.getElementById('key-select');
@@ -850,12 +971,12 @@ function update() {
     resetChordSearchUI();             // <-- add this
     renderInversionButtons(size);
     setActiveInversion(0); // handles rendering and note labels
-    const roman = MODE_ROMAN_NUMERALS[selectedMode]?.[index % 7] || '';
-    let quality = '';
-    if (roman.includes('°')) quality = 'Diminished';
-    else if (roman.includes('+')) quality = 'Augmented';
-    else if (roman === roman.toUpperCase()) quality = 'Major';
-    else quality = 'Minor';
+     const roman = MODE_ROMAN_NUMERALS[selectedMode]?.[index % 7] || '';
+    let quality = qualityFromRoman(roman);
+    if (!quality) {
+      const intervals = idsToIntervals(baseChordIDs);
+      quality = classifyTriad(intervals) || '';
+    }
     const chordDisplay = document.getElementById('active_chord');
     // Strip octave from note for display (replace digit with empty string)
     if (chordDisplay && note) {
@@ -1021,14 +1142,14 @@ function resetChordSearchUI() {
   if (summary) summary.textContent = '';
   if (results) {
     results.innerHTML = '';
-results.classList.remove('is-open');
+    results.classList.remove('is-open');
   }
   const portal = document.getElementById('chord-search-results');
-if (portal) {
-portal.classList.remove('is-open');  portal.innerHTML = '';
-}
-const pianoContainer = document.getElementById('pianoSvgContainer');
-if (pianoContainer) pianoContainer.style.pointerEvents = '';
+  if (portal) {
+    portal.classList.remove('is-open'); portal.innerHTML = '';
+  }
+  const pianoContainer = document.getElementById('pianoSvgContainer');
+  if (pianoContainer) pianoContainer.style.pointerEvents = '';
   // Visibility of #chord-search itself is still controlled by updateChordVisibility()
 }
 renderChordTypeToggle();
@@ -1036,4 +1157,3 @@ populateModesOnce();
 updateKeyOptions(selectedMode);
 update();
 setPianoScale(1.4);
-
