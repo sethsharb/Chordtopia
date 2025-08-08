@@ -307,9 +307,13 @@ span.scale-note,
 #footer {
   position: fixed;
   bottom: var(--padding);
-  width: 100%;
-  text-align: center;
-  /* centers the inline controls below */
+  left: 0;
+  right: 0;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: .75rem;
+  padding-inline: 16px;
 }
 
 /* Chord notes visibility */
@@ -320,11 +324,12 @@ span.scale-note,
 #chord-notes.show {
   display: flex;
   gap: 2em;
-  padding: 0 16px 20px 16px;
-  /* bottom padding only */
+  padding: 0 16px 20px 16px; /* bottom padding only */
   flex-direction: row;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  width: max-content;
+  margin: 0 auto;
 }
 
 /* Inversions container + states */
@@ -334,10 +339,13 @@ span.scale-note,
 
 .inversions.show {
   display: inline-flex;
-  /* sits inline with the toggle */
-  gap: 0.5rem;
+  gap: 1em;
+  flex-direction: row;
   align-items: center;
-  padding: 6px 10px;
+  justify-content: center;
+  width: max-content;
+  margin: 0 auto;
+  padding: 6px;
   border-radius: var(--radius-mode-buttons, 12px);
   background: var(--colors-transparency-black-trans-5, rgba(0, 0, 0, 0.05));
 }
@@ -353,7 +361,7 @@ span.scale-note,
   background: none;
   display: flex;
   gap: 2em;
-  padding: 10px 16px;
+  padding: 8px 16px;
   align-items: center;
   border-radius: var(--radius-mode-buttons, 12px);
   cursor: pointer;
@@ -369,6 +377,8 @@ span.scale-note,
 .segmented {
   display: inline-flex;
   overflow: hidden;
+  width: max-content;
+  margin: 0 auto;
 }
 
 .segmented .segment {
@@ -382,6 +392,8 @@ span.scale-note,
   border-radius: 0;
   color: white;
   opacity: .5;
+  font-size: .75em;
+
 }
 
 .segmented .segment.active {
@@ -393,12 +405,14 @@ span.scale-note,
 /* Toggle (JS sets display none/'' already) */
 #footer .chord-type-toggle {
   display: inline-flex;
-  /* sits inline with .inversions.show */
   vertical-align: middle;
-  margin-right: 1em;
-  /* space between toggle and inversions */
+  margin: 0 auto;
+  width: max-content;
 }
 
+.inv-btn {
+  font-size: .75em;
+}
 
 /* .inversions.show is already inline-flex from Step 1 */
 /* //////////////////////////////////////// */
@@ -409,4 +423,12 @@ span.scale-note,
 .scale-highlight,
 .chord-highlight {
   transition: all 3s ease;
+}
+
+button, .segment, .inv-btn {
+  -webkit-tap-highlight-color: transparent; /* removes the flash */
+}
+
+button:focus {
+  outline: none;
 }
