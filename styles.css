@@ -205,6 +205,10 @@ button {
 
 }
 
+#header {
+  z-index: 10000;
+}
+
 .scale-note,
 .roman-display span {
   text-align: center;
