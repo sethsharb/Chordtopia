@@ -589,7 +589,7 @@ function hideAfterTransition(e) {
 openBtn?.addEventListener('click', () => {
   // show immediately, then slide down
   controls.style.visibility = 'visible';
-  controls.classList.add('is-open');
+  controls.classList.toggle('is-open');
 });
 
 closeBtn?.addEventListener('click', () => {
