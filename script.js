@@ -178,11 +178,11 @@ function renderInversionButtons(count) {
 function renderChordTypeToggle() {
   // Add a Triads/7ths toggle inside .controls if not present
   const footer = document.getElementById('footer');
-if (!footer || footer.querySelector('.chord-type-toggle')) return;
+  if (!footer || footer.querySelector('.chord-type-toggle')) return;
 
-const wrap = document.createElement('div');
-wrap.className = 'chord-type-toggle';
-wrap.innerHTML = `
+  const wrap = document.createElement('div');
+  wrap.className = 'chord-type-toggle';
+  wrap.innerHTML = `
   <div class="segmented chord-type" role="group" aria-label="Chord type">
     <button type="button" data-chord-type="triad"
       class="chord-type-btn segment active"
@@ -193,15 +193,15 @@ wrap.innerHTML = `
   </div>
 `;
 
-const inversionsContainer = footer.querySelector('.inversions');
-// Put the toggle directly ABOVE the inversions (no content removed)
-if (inversionsContainer) {
-  footer.insertBefore(wrap, inversionsContainer);
-} else {
-  footer.appendChild(wrap);
-}
-// Hidden by default; shown only when a chord is active
-wrap.style.display = 'none';
+  const inversionsContainer = footer.querySelector('.inversions');
+  // Put the toggle directly ABOVE the inversions (no content removed)
+  if (inversionsContainer) {
+    footer.insertBefore(wrap, inversionsContainer);
+  } else {
+    footer.appendChild(wrap);
+  }
+  // Hidden by default; shown only when a chord is active
+  wrap.style.display = 'none';
 
   wrap.addEventListener('click', (e) => {
     const btn = e.target.closest('.chord-type-btn');
@@ -698,7 +698,7 @@ modeSelect.addEventListener('click', e => {
 });
 
 const controls = document.querySelector('.controls');
-const openBtn  = document.getElementById('active_mode-key');
+const openBtn = document.getElementById('active_mode-key');
 const closeBtn = document.getElementById('closeControls');
 
 // helper: hide only AFTER the slide-up completes

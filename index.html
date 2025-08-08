@@ -9,10 +9,10 @@
 
 <body>
   <div class="controls">
-    <label>Mode:
+    <label><div class="label">Mode:</div>
       <div id="mode-select"></div>
     </label>
-    <label>Key:
+    <label><div class="label">Key:</div>
       <div id="key-select"></div>
     </label>
     <button id="closeControls" style="display:flex; align-items: center; gap:0.4em; line-height:1;">
@@ -28,16 +28,16 @@
 
   <div id="header">
     <div class="active_mode-key">
-      <div>Key + Mode</div>
+      <div class="label">Key + Mode</div>
       <div id="active_mode-key"></div>
     </div>
     <div id="scale-container" class="scale-container">
-      <div>Scale</div>
+      <div class="label">Scale</div>
       <div id="scale-display"></div>
       <div id="roman-display" class="roman-display"></div>
     </div>
     <div class="active_chord">
-      <div>Chord + Quality</div>
+      <div class="label">Chord + Quality</div>
       <div id="active_chord"></div>
     </div>
   </div>
@@ -50,9 +50,8 @@
   </div>
 
   <div id="footer">
-    <div id="chord-notes" class="chord-notes"></div>
-
     <div class="inversions"></div>
+    <div id="chord-notes" class="chord-notes"></div>
   </div>
 
   <div id="bg1"></div>
