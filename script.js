@@ -126,6 +126,101 @@ let scaleIDs = [];
 let scaleNotes = [];
 let baseChordIDs = [];
 let currentInversion = 0;
+let chordType = 'triad'; // 'triad' | 'seventh'
+let lastClickedScaleId = null; // remember selected scale degree id for rebuilding chords on toggle
+
+function getChordSize() {
+  return chordType === 'seventh' ? 4 : 3;
+}
+
+function buildChordIDs(scaleIDs, startIndex, chordSize) {
+  const ids = [];
+  for (let k = 0; k < chordSize; k++) {
+    ids.push(scaleIDs[startIndex + 2 * k]);
+  }
+  return ids;
+}
+
+function ordinalLabel(i) {
+  if (i === 0) return 'Root';
+  if (i === 1) return '1st';
+  if (i === 2) return '2nd';
+  return '3rd';
+}
+
+function renderInversionButtons(count) {
+  const el = document.querySelector('.inversions');
+  if (!el) return;
+  el.innerHTML = Array.from({ length: count }, (_, i) =>
+    `<button type="button" data-inversion="${i}" class="inv-btn${i === currentInversion ? ' active' : ''}" aria-pressed="${i === currentInversion}">${ordinalLabel(i)}</button>`
+  ).join('');
+}
+
+function renderChordTypeToggle() {
+  // Add a Triads/7ths toggle inside .controls if not present
+  const footer = document.getElementById('footer');
+if (!footer || footer.querySelector('.chord-type-toggle')) return;
+
+const wrap = document.createElement('div');
+wrap.className = 'chord-type-toggle';
+wrap.innerHTML = `
+  <div class="segmented chord-type" role="group" aria-label="Chord type">
+    <button type="button" data-chord-type="triad"
+      class="chord-type-btn segment active"
+      aria-pressed="true">Triads</button>
+    <button type="button" data-chord-type="seventh"
+      class="chord-type-btn segment"
+      aria-pressed="false">7ths</button>
+  </div>
+`;
+
+const inversionsContainer = footer.querySelector('.inversions');
+// Put the toggle directly ABOVE the inversions (no content removed)
+if (inversionsContainer) {
+  footer.insertBefore(wrap, inversionsContainer);
+} else {
+  footer.appendChild(wrap);
+}
+// Hidden by default; shown only when a chord is active
+wrap.style.display = 'none';
+
+  wrap.addEventListener('click', (e) => {
+    const btn = e.target.closest('.chord-type-btn');
+    if (!btn) return;
+    const newType = btn.dataset.chordType;
+    if (!newType || newType === chordType) return;
+
+    // Update toggle button states
+    wrap.querySelectorAll('.chord-type-btn').forEach(b => {
+      const on = b.dataset.chordType === newType;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+
+    chordType = newType;
+
+    // If a scale degree is active, rebuild that chord for the new size
+    if (lastClickedScaleId && Array.isArray(scaleIDs) && scaleIDs.length) {
+      const idx = scaleIDs.indexOf(lastClickedScaleId);
+      if (idx !== -1) {
+        const size = getChordSize();
+        baseChordIDs = buildChordIDs(scaleIDs, idx, size);
+        currentInversion = 0;
+        renderInversionButtons(size);
+        setActiveInversion(0);
+        const invNoteNames = baseChordIDs.map(id => ID_TO_NOTE[id]).filter(Boolean);
+        chordNotesDiv.innerHTML = renderChordNoteLabels(invNoteNames);
+        renderKeys([], baseChordIDs, 3, 0, true);
+        updateChordVisibility();
+        return;
+      }
+    }
+    // Fallback if nothing selected
+    renderInversionButtons(getChordSize());
+    renderKeys(scaleIDs, [], 3, 0, true);
+    updateChordVisibility();
+  });
+}
 function renderChordNoteLabels(noteNames) {
   const scaleSet = new Set(Array.from(document.querySelectorAll('#scale-display .scale-note')).map(el => el.textContent.trim()));
   return noteNames.map(n => {
@@ -148,10 +243,13 @@ function getDisplaySpelling(base) {
 }
 
 function updateChordVisibility() {
-  const show = currentChord.length === 3;
+  const show = baseChordIDs.length >= 3; // show for triads or sevenths
   document.querySelector('#chord-notes')?.classList.toggle('show', show);
   document.querySelector('.inversions')?.classList.toggle('show', show);
   document.querySelector('.active_chord')?.classList.toggle('show', show);
+  // Toggle the Triads/7ths toggle visibility
+  const typeToggle = document.querySelector('.chord-type-toggle');
+  if (typeToggle) typeToggle.style.display = show ? '' : 'none';
 }
 
 function resetChordDisplay() {
@@ -401,6 +499,7 @@ function update() {
     const target = e.target;
     if (!target.classList.contains('scale-note')) return;
     const noteId = parseInt(target.dataset.noteId, 10);
+    lastClickedScaleId = noteId;
     const note = ID_TO_NOTE[noteId] || '';
     // Check if user clicked same note twice
     if (note === lastClickedScaleNote) {
@@ -416,20 +515,15 @@ function update() {
     // Find index of scale note in current scale
     const index = scaleIDs.indexOf(noteId);
     if (index === -1) return;
-    // Chord logic: root position triad from this scale degree, spanning into next octave if needed
-    // Use the longer diatonic scale for chord generation (no wrapping)
-    const chordIDs = [
-      scaleIDs[index],
-      scaleIDs[index + 2],
-      scaleIDs[index + 4]
-    ];
-    baseChordIDs = chordIDs; currentInversion = 0;
-    currentChord = chordIDs.map(id => ID_TO_NOTE[id]);
-    const chordNotes = currentChord.map(name => name.slice(0, -1));
-    updateChordVisibility();
-    setActiveInversion(0);
-    renderKeys([], chordIDs, 2, 0, true);
-    chordNotesDiv.innerHTML = renderChordNoteLabels(currentChord);
+  // Chord logic: triad (3) or seventh (4) from this scale degree
+const size = getChordSize();
+const chordIDs = buildChordIDs(scaleIDs, index, size);
+baseChordIDs = chordIDs;
+currentInversion = 0;
+currentChord = chordIDs.map(id => ID_TO_NOTE[id]);
+updateChordVisibility();
+renderInversionButtons(size);
+setActiveInversion(0); // handles rendering and note labels
     const roman = MODE_ROMAN_NUMERALS[selectedMode]?.[index % 7] || '';
     let quality = '';
     if (roman.includes('°')) quality = 'Diminished';
@@ -457,30 +551,28 @@ function update() {
 
 
 const inversionsEl = document.querySelector('.inversions');
+if (inversionsEl) {
+  renderInversionButtons(getChordSize());
+}
 
 function setActiveInversion(i = 0) {
-  if (!inversionsEl || baseChordIDs.length !== 3) return;
+  const inversionsEl = document.querySelector('.inversions');
+  if (!inversionsEl || baseChordIDs.length < 3) return;
 
+  const n = baseChordIDs.length; // 3 for triads, 4 for sevenths
+  const inv = ((i % n) + n) % n; // normalize
+  currentInversion = inv;
+
+  // Update active state on buttons (they may have been rebuilt)
   inversionsEl.querySelectorAll('[data-inversion]').forEach(b => {
-    const on = String(i) === String(b.dataset.inversion);
+    const on = String(inv) === String(b.dataset.inversion);
     b.classList.toggle('active', on);
     b.setAttribute('aria-pressed', on ? 'true' : 'false');
   });
 
-  currentInversion = i;
-
-  const root = baseChordIDs[0];
-  const third = baseChordIDs[1];
-  const fifth = baseChordIDs[2];
-
-  let invIDs;
-  if (i === 1) {
-    invIDs = [third, fifth, root + 12];
-  } else if (i === 2) {
-    invIDs = [fifth, root + 12, third + 12];
-  } else {
-    invIDs = [root, third, fifth];
-  }
+  // Generalized inversion: lift the first `inv` notes by an octave, then rotate
+  const raised = baseChordIDs.map((id, idx) => (idx < inv ? id + 12 : id));
+  const invIDs = raised.slice(inv).concat(raised.slice(0, inv));
 
   const invNoteNames = invIDs.map(id => ID_TO_NOTE[id]).filter(Boolean);
   chordNotesDiv.innerHTML = renderChordNoteLabels(invNoteNames);
@@ -602,6 +694,7 @@ controls.addEventListener('mouseleave', () => {
   controls.classList.remove('is-open');
 });
 
+renderChordTypeToggle();
 populateModesOnce();
 updateKeyOptions(selectedMode);
 update();
