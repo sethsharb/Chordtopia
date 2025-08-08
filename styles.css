@@ -1,16 +1,10 @@
 @font-face {
-  font-family: 'Shorai';
-  src: url('fonts/ShoraiSansDemi-8015162.ttf') format('ttf');
-  font-weight: demi;
+  font-family: 'SF Pro';
+  src: url('fonts/SF-Pro.ttf') format('ttf');
+  font-weight: normal;
   font-style: normal;
 }
 
-@font-face {
-  font-family: 'Shorai';
-  src: url('fonts/ShoraiSansMedium-8015179.ttf') format('ttf');
-  font-weight: medium;
-  font-style: normal;
-}
 
 :root {
   --padding: 50px;
@@ -24,7 +18,7 @@ body {
   height: 100vh;
   min-height: 666px;
   padding-top: 20px;
-  font-family: 'Shorai', sans-serif;
+  font-family: 'SF Pro', Roboto, sans-serif;
   font-weight: demi;
   font-size: 14pt;
   background: #8BEB83;
@@ -137,6 +131,7 @@ button {
   gap: .125em;
   justify-content: center;
   padding: 20px;
+  align-items: baseline;
 }
 
 .mode-button {
@@ -195,11 +190,11 @@ button {
   gap: 0.5rem;
   justify-items: center;
   text-align: center;
+  align-items: baseline;
 }
 
 #scale-display {
   margin-bottom: .5em;
-
 }
 
 .scale-note,
@@ -498,3 +493,23 @@ cursor:pointer;
   align-items: center;
   gap: 0.5rem; /* space between chord text and search */
 }
+
+.acc {
+  display: inline-block;
+  font-size: 0.72em;
+  line-height: 0;
+  vertical-align: 0.3em; /* raises the glyph */
+}
+
+#scale-display .scale-note {
+  display: inline-block;   /* not flex */
+  white-space: nowrap;     /* keep letter + accidental together */
+}
+
+/* #scale-display .scale-note {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 0;
+  white-space: nowrap;
+} */

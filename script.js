@@ -1,22 +1,22 @@
 // --- Constants ---
 // NOTE_NAMES and pitch-aware NOTE_MAP and ID_TO_NOTE, 36 slots, scale centered in IDs 12–24
-const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+const NOTE_NAMES = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'];
 const NOTE_MAP = {};
 const ID_TO_NOTE = {};
 const ENHARMONIC_MAP = {
-  'C#': 'Db', 'Db': 'C#',
-  'D#': 'Eb', 'Eb': 'D#',
-  'F#': 'Gb', 'Gb': 'F#',
-  'G#': 'Ab', 'Ab': 'G#',
-  'A#': 'Bb', 'Bb': 'A#',
-  // Naturals with enharmonic equivalents
-  'E#': 'F',  'F': 'E#',
-  'Fb': 'E',  'E': 'Fb',
-  'Cb': 'B',  'B': 'Cb',
-  'B#': 'C',  'C': 'B#'
+  'C♯': 'D♭', 'D♭': 'C♯',
+  'D♯': 'E♭', 'E♭': 'D♯',
+  'F♯': 'G♭', 'G♭': 'F♯',
+  'G♯': 'A♭', 'A♭': 'G♯',
+  'A♯': 'B♭', 'B♭': 'A♯',
+  'E♯': 'F',  'F': 'E♯',
+  'F♭': 'E',  'E': 'F♭',
+  'C♭': 'B',  'B': 'C♭',
+  'B♯': 'C',  'C': 'B♯'
 };
+
 function getNoteLetter(n) {
-  return n.replace(/[#b]/, '');
+  return n.replace(/[♯♭]/, '');
 }
 
 function adjustEnharmonics(scale, root) {
@@ -137,15 +137,15 @@ function classifyTriad(intervals) {
 
 // Valid key spellings per mode (used by updateKeyOptions and validation in update)
 const MODE_KEYS = {
-  Major: ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'],
-  Minor: ['C', 'C#', 'D', 'D#', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'],
-  Dorian: ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'Ab', 'A', 'Bb', 'B'],
-  Phrygian: ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'Bb', 'B'],
-  Lydian: ['C', 'D', 'Db', 'E', 'Eb', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'],
-  Mixolydian: ['C', 'D', 'E', 'F', 'F#', 'G', 'A', 'A#', 'B', 'Bb', 'C#', 'D#', 'G#'],
-  Locrian: ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B', 'Bb'],
-  Harmonic: ['C', 'C#', 'D', 'D#', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'],
-  Melodic: ['C', 'C#', 'D', 'D#', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'],
+  Major: ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'F♯', 'G♭', 'G', 'A♭', 'A', 'B♭', 'B'],
+  Minor: ['C', 'C♯', 'D', 'D♯', 'E♭', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'B♭', 'B'],
+  Dorian: ['C', 'C♯', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'G♯', 'A♭', 'A', 'B♭', 'B'],
+  Phrygian: ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B♭', 'B'],
+  Lydian: ['C', 'D', 'D♭', 'E', 'E♭', 'F', 'G♭', 'G', 'A♭', 'A', 'B♭', 'B'],
+  Mixolydian: ['C', 'D', 'E', 'F', 'F♯', 'G', 'A', 'A♯', 'B', 'B♭', 'C♯', 'D♯', 'G♯'],
+  Locrian: ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B', 'B♭'],
+  Harmonic: ['C', 'C♯', 'D', 'D♯', 'E♭', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'B♭', 'B'],
+  Melodic: ['C', 'C♯', 'D', 'D♯', 'E♭', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'B♭', 'B'],
 };
 
 function isKeyValidForMode(baseKey, mode) {
@@ -162,8 +162,8 @@ const KEY_BACKGROUNDS = {
   'Eb': '#BEBAFF',
   'E': '#FFAAB2',
   'F': '#FFAF91',
-  'F#': '#D6DF94',
-  'Gb': '#D6DF94',
+  'F#': '#f2faa6',
+  'Gb': '#f1faa6',
   'G': '#8BEB83',
   'G#': '#66F4BB',
   'Ab': '#66F4BB',
@@ -187,6 +187,10 @@ function getSizes() {
   const BLACK_W = WHITE_W * BLACK_W_RATIO;
   const BLACK_H = WHITE_H * BLACK_H_RATIO;
   return { WHITE_W, WHITE_H, BLACK_W, BLACK_H };
+}
+
+function supAcc(str) {
+  return String(str).replace(/([♯♭])/g, '<span class="acc">$1</span>');
 }
 
 // Call this to resize the whole piano (e.g., setPianoScale(1.5) = 150%)
@@ -316,7 +320,7 @@ function renderChordNoteLabels(noteNames) {
       : (ENHARMONIC_MAP[base] && scaleSet.has(ENHARMONIC_MAP[base]))
         ? ENHARMONIC_MAP[base]
         : base;
-    return `<div class="chord-note">${disp}</div>`;
+return `<div class="chord-note">${supAcc(disp)}</div>`;
   }).join('');
 }
 
@@ -527,9 +531,9 @@ function renderChordSearchUI() {
       }, 0);
 
       results.innerHTML = matches.map(m => {
-        const tag = `${m.key} ${m.mode} — ${m.roman}`;
-        return `<button type="button" class="chord-match" data-key="${m.key}" data-mode="${m.mode}" data-degree="${m.degree}">${tag}</button>`;
-      }).join('');
+  const tag = `${supAcc(m.key)} ${m.mode} — ${m.roman}`;
+  return `<button type="button" class="chord-match" data-key="${m.key}" data-mode="${m.mode}" data-degree="${m.degree}">${tag}</button>`;
+}).join('');
       results.querySelectorAll('.chord-match').forEach(b => {
         Object.assign(b.style, {
           display: 'block',
@@ -690,14 +694,15 @@ updateChordVisibility();
 const chordDisplay = document.getElementById('active_chord');
 if (chordDisplay) {
   if (typeof preservedLabel === 'string' && preservedLabel.trim()) {
-    chordDisplay.textContent = preservedLabel.trim();
+    chordDisplay.innerHTML = supAcc(preservedLabel.trim());
   } else if (baseChordIDs.length) {
     const rootName = (ID_TO_NOTE[baseChordIDs[0]] || '').replace(/\d+$/, '');
     const intervals = idsToIntervals(baseChordIDs);
     const inferred = classifyTriad(intervals) || '';
-    chordDisplay.textContent = inferred ? `${getDisplaySpelling(rootName)} ${inferred}` : getDisplaySpelling(rootName);
+    const disp = getDisplaySpelling(rootName);
+    chordDisplay.innerHTML = inferred ? `${supAcc(disp)} ${inferred}` : supAcc(disp);
   } else {
-    chordDisplay.textContent = '';
+    chordDisplay.innerHTML = '';
   }
 }
 }
@@ -942,7 +947,7 @@ function update() {
   renderKeys(scaleIDs, [], 3, 0, false);
   // Render scale display using adjustedScale
   scaleDisplay.innerHTML = adjustedScale.slice(0, 7).map((note, i) =>
-    `<span class="scale-note" data-note-id="${scaleIDs[i]}" data-degree="${i}">${note}</span>`
+  `<span class="scale-note" data-note-id="${scaleIDs[i]}" data-degree="${i}">${supAcc(note)}</span>`
   ).join('');
   // Render roman numerals
   const romanDisplay = document.getElementById('roman-display');
@@ -990,20 +995,20 @@ function update() {
     }
     const chordDisplay = document.getElementById('active_chord');
     // Strip octave from note for display (replace digit with empty string)
-    if (chordDisplay && note) {
-      const base = note.replace(/\d+$/, '');
-      chordDisplay.textContent = `${getDisplaySpelling(base)} ${quality}`;
-    }
+   if (chordDisplay && note) {
+  const base = note.replace(/\d+$/, '');
+  chordDisplay.innerHTML = `${supAcc(getDisplaySpelling(base))} ${quality}`;
+}
     // Re-render roman numerals (already done above but safe to include)
     romanDisplay.innerHTML = romanNumerals.map(n => `<span>${n}</span>`).join('');
   };
   const controls = document.querySelector('.controls');
   const activeDisplay = document.getElementById('active_mode-key');
   if (activeDisplay) {
-    if (typeof selectedKey === 'string') {
-      activeDisplay.textContent = `${baseKey} ${selectedMode} ›`;
-    }
+  if (typeof selectedKey === 'string') {
+    activeDisplay.innerHTML = `${supAcc(baseKey)} ${selectedMode} ›`;
   }
+}
 }
 
 
@@ -1085,7 +1090,7 @@ function updateKeyOptions(mode) {
     }
     if (!matching) return;
     const btn = document.createElement('div');
-    btn.textContent = base;
+    btn.innerHTML = supAcc(base);
     btn.dataset.note = matching;
     btn.classList.add('key-button');
     btn.addEventListener('click', () => {
