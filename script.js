@@ -449,6 +449,10 @@ function renderChordSearchUI() {
   btn.addEventListener('click', () => {
     const matches = findChordInOtherKeys();
     results.innerHTML = '';
+    // Ensure the popover can show even after a previous no-match
+    summary.textContent = '';
+    results.style.display = '';
+    results.classList.add('is-open');
 
     // Position the fixed popover near the button
     // Position values sent to CSS via custom properties
@@ -480,73 +484,75 @@ function renderChordSearchUI() {
     results.style.setProperty('--popover-right', right + 'px');
     if (!matches.length) {
       summary.textContent = 'No matches found in other keys/modes.';
-      results.style.display = 'none';
-      return;
+      // Keep the popover visible so future searches work normally
+      // and show a lightweight message inside the results panel.
+      results.innerHTML = '<div class="no-matches" style="padding:8px 10px;text-align:center;opacity:.85;">No matches found in other keys/modes.</div>';
+    } else {
+      // Temporarily disable pointer events on the piano so the popover can be interacted with
+      const pianoContainer = document.getElementById('pianoSvgContainer');
+      if (pianoContainer) pianoContainer.style.pointerEvents = 'none';
+      const onResize = () => {
+        const rect2 = btn.getBoundingClientRect();
+        const width2 = Math.min(Math.max(260, rect2.width), window.innerWidth - 2 * viewportPadding);
+        const maxH2 = window.innerHeight - 2 * viewportPadding;
+        const contentH2 = Math.min(results.scrollHeight, maxH2);
+        let top2 = rect2.bottom + 6;
+        if (top2 + contentH2 > window.innerHeight - viewportPadding) {
+          top2 = Math.max(viewportPadding, rect2.top - contentH2 - 6);
+        }
+        const right2 = Math.max(viewportPadding, window.innerWidth - rect2.right - 6);
+        results.style.setProperty('--popover-width', width2 + 'px');
+        results.style.setProperty('--popover-maxh', maxH2 + 'px');
+        results.style.setProperty('--popover-top', top2 + 'px');
+        results.style.setProperty('--popover-right', right2 + 'px');
+      };
+      const hide = (ev) => {
+        if (ev && (results.contains(ev.target) || btn.contains(ev.target))) return;
+        results.classList.remove('is-open');
+        if (pianoContainer) pianoContainer.style.pointerEvents = '';
+        window.removeEventListener('scroll', hide, true);
+        window.removeEventListener('resize', hide, true);
+        document.removeEventListener('mousedown', hide, true);
+      };
+      // Bind listeners after showing
+      setTimeout(() => {
+        window.addEventListener('scroll', hide, true);
+        window.addEventListener('resize', onResize, true);
+        document.addEventListener('mousedown', hide, true);
+      }, 0);
+
+      results.innerHTML = matches.map(m => {
+        const tag = `${m.key} ${m.mode} — ${m.roman}`;
+        return `<button type="button" class="chord-match" data-key="${m.key}" data-mode="${m.mode}" data-degree="${m.degree}">${tag}</button>`;
+      }).join('');
+      results.querySelectorAll('.chord-match').forEach(b => {
+        Object.assign(b.style, {
+          display: 'block',
+          width: '100%',
+          textAlign: 'center',
+          padding: '8px 10px',
+          borderRadius: '8px',
+          border: '1px solid rgba(255,255,255,.12)',
+          background: 'transparent',
+          color: 'white',
+          cursor: 'pointer'
+        });
+        b.addEventListener('mouseenter', () => b.style.background = 'rgba(255,255,255,.08)');
+        b.addEventListener('mouseleave', () => b.style.background = 'transparent');
+      });
+
+      results.querySelectorAll('.chord-match').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const base = btn.dataset.key;
+          const mode = btn.dataset.mode;
+          const degree = parseInt(btn.dataset.degree, 10) || 0;
+          const preserved = baseChordIDs ? baseChordIDs.slice() : null;
+          const labelEl = document.getElementById('active_chord');
+          const preservedLabel = labelEl ? labelEl.textContent : null;
+          switchToKeyModeAndDegree(base, mode, degree, preserved, preservedLabel);
+        });
+      });
     }
-    // Temporarily disable pointer events on the piano so the popover can be interacted with
-    const pianoContainer = document.getElementById('pianoSvgContainer');
-    if (pianoContainer) pianoContainer.style.pointerEvents = 'none';
-    const onResize = () => {
-      const rect2 = btn.getBoundingClientRect();
-      const width2 = Math.min(Math.max(260, rect2.width), window.innerWidth - 2 * viewportPadding);
-      const maxH2 = window.innerHeight - 2 * viewportPadding;
-      const contentH2 = Math.min(results.scrollHeight, maxH2);
-      let top2 = rect2.bottom + 6;
-      if (top2 + contentH2 > window.innerHeight - viewportPadding) {
-        top2 = Math.max(viewportPadding, rect2.top - contentH2 - 6);
-      }
-      const right2 = Math.max(viewportPadding, window.innerWidth - rect2.right - 6);
-      results.style.setProperty('--popover-width', width2 + 'px');
-      results.style.setProperty('--popover-maxh', maxH2 + 'px');
-      results.style.setProperty('--popover-top', top2 + 'px');
-      results.style.setProperty('--popover-right', right2 + 'px');
-    };
-    const hide = (ev) => {
-      if (ev && (results.contains(ev.target) || btn.contains(ev.target))) return;
-      results.classList.remove('is-open');
-      if (pianoContainer) pianoContainer.style.pointerEvents = '';
-      window.removeEventListener('scroll', hide, true);
-      window.removeEventListener('resize', hide, true);
-      document.removeEventListener('mousedown', hide, true);
-    };
-    // Bind listeners after showing
-    setTimeout(() => {
-      window.addEventListener('scroll', hide, true);
-      window.addEventListener('resize', onResize, true);
-      document.addEventListener('mousedown', hide, true);
-    }, 0);
-
-    results.innerHTML = matches.map(m => {
-      const tag = `${m.key} ${m.mode} — ${m.roman}`;
-      return `<button type="button" class="chord-match" data-key="${m.key}" data-mode="${m.mode}" data-degree="${m.degree}">${tag}</button>`;
-    }).join('');
-    results.querySelectorAll('.chord-match').forEach(b => {
-      Object.assign(b.style, {
-        display: 'block',
-        width: '100%',
-        textAlign: 'center',
-        padding: '8px 10px',
-        borderRadius: '8px',
-        border: '1px solid rgba(255,255,255,.12)',
-        background: 'transparent',
-        color: 'white',
-        cursor: 'pointer'
-      });
-      b.addEventListener('mouseenter', () => b.style.background = 'rgba(255,255,255,.08)');
-      b.addEventListener('mouseleave', () => b.style.background = 'transparent');
-    });
-
-    results.querySelectorAll('.chord-match').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const base = btn.dataset.key;
-        const mode = btn.dataset.mode;
-        const degree = parseInt(btn.dataset.degree, 10) || 0;
-        const preserved = baseChordIDs ? baseChordIDs.slice() : null;
-const labelEl = document.getElementById('active_chord');
-const preservedLabel = labelEl ? labelEl.textContent : null;
-switchToKeyModeAndDegree(base, mode, degree, preserved, preservedLabel);
-      });
-    });
   });
 }
 // Transpose a chord by mapping its root ID to a new root ID, preserving semitone intervals
