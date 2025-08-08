@@ -77,23 +77,37 @@ button {
 
 /* Just the Frame around the filters */
 .controls {
-  display: none;
   position: fixed;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 1;
+  left: 0; right: 0; top: 0;
+  z-index: 1000;
   width: 100vw;
 
+  display: flex;                 /* keep it rendered */
   flex-direction: column;
   gap: 1rem;
   align-items: center;
-
   padding: 3em 0;
-  background-color: rgba(0, 0, 0, 0.25);
+
+  transform: translateY(-100%);  /* hidden above */
+  transition: transform .4s ease;
+  will-change: transform;
+
+  background-color: rgba(0,0,0,.25);
   backdrop-filter: blur(10px);
-  /* This is what does the blurring */
   -webkit-backdrop-filter: blur(15px);
+
+  /* keeps it out of focus order when closed, but doesn't kill animation */
+  visibility: hidden;
 }
+
+.controls.is-open {
+  transform: translateY(87.5%);      /* slide in */
+  visibility: visible;           /* visible while open */
+}
+
+/* IMPORTANT: kill this rule if you have it anywhere:
+   .controls.show { display: flex; }
+   You already have display:flex on .controls, so this class just causes instant hide/show bugs. */
 
 #closeControls {
   background: black;
@@ -191,11 +205,14 @@ label {
 
 #scale-display {
   margin-bottom: .5em;
+
 }
 
 .scale-note,
 .roman-display span {
   text-align: center;
+  width: 25px;
+
 }
 
 span.scale-note,

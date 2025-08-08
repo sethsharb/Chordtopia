@@ -48,14 +48,14 @@ for (let octave = 1; octave <= 7; octave++) {
 
 const MODES = {
   Major: [2, 2, 1, 2, 2, 2, 1],
-  Minor: [2, 1, 2, 2, 1, 2, 2],
   Dorian: [2, 1, 2, 2, 2, 1, 2],
   Phrygian: [1, 2, 2, 2, 1, 2, 2],
   Lydian: [2, 2, 2, 1, 2, 2, 1],
   Mixolydian: [2, 2, 1, 2, 2, 1, 2],
-  Locrian: [1, 2, 2, 1, 2, 2, 2],
+  Minor: [2, 1, 2, 2, 1, 2, 2],
   Harmonic: [2, 1, 2, 2, 1, 3, 1],
-  Melodic: [2, 1, 2, 2, 2, 2, 1]
+  Melodic: [2, 1, 2, 2, 2, 2, 1],
+  Locrian: [1, 2, 2, 1, 2, 2, 2]
 };
 
 // Only sharp notes for simplicity in the new system.
@@ -63,14 +63,14 @@ const MODES = {
 // Roman numerals for 7 scale degrees
 const MODE_ROMAN_NUMERALS = {
   Major: ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'],
-  Minor: ['i', 'ii°', 'III', 'iv', 'v', 'VI', 'VII'],
   Dorian: ['i', 'ii', 'III', 'IV', 'v', 'vi°', 'VII'],
   Phrygian: ['i', 'II', 'III', 'iv', 'v°', 'VI', 'vii'],
   Lydian: ['I', 'II', 'iii', '#iv°', 'V', 'vi', 'vii'],
   Mixolydian: ['I', 'ii', 'iii°', 'IV', 'v', 'vi', 'VII'],
-  Locrian: ['i°', 'II', 'iii', 'iv', 'V', 'VI', 'VII'],
+  Minor: ['i', 'ii°', 'III', 'iv', 'v', 'VI', 'VII'],
   Harmonic: ['i', 'ii°', 'III+', 'iv', 'V', 'VI', 'vii°'],
-  Melodic: ['i', 'ii', 'III', 'IV', 'V', 'vi°', 'vii°']
+  Melodic: ['i', 'ii', 'III', 'IV', 'V', 'vi°', 'vii°'],
+  Locrian: ['i°', 'II', 'iii', 'iv', 'V', 'VI', 'VII']
 };
 
 const KEY_BACKGROUNDS = {
@@ -452,12 +452,6 @@ function update() {
       activeDisplay.textContent = `${baseKey} ${selectedMode} ›`;
     }
   }
-  controls?.addEventListener('mouseleave', () => {
-    controls.style.display = 'none';
-  });
-  document.getElementById('closeControls')?.addEventListener('click', () => {
-    controls.style.display = 'none';
-  });
 }
 
 
@@ -580,15 +574,33 @@ modeSelect.addEventListener('click', e => {
   update();
 });
 
-const activeModeKey = document.getElementById('active_mode-key');
-const controlsPanel = document.querySelector('.controls');
+const controls = document.querySelector('.controls');
+const openBtn  = document.getElementById('active_mode-key');
+const closeBtn = document.getElementById('closeControls');
 
-if (activeModeKey && controlsPanel) {
-  activeModeKey.addEventListener('click', () => {
-    controlsPanel.style.display =
-      controlsPanel.style.display === 'flex' ? 'none' : 'flex';
-  });
+// helper: hide only AFTER the slide-up completes
+function hideAfterTransition(e) {
+  if (e.propertyName === 'transform') {
+    controls.style.visibility = 'hidden';
+    controls.removeEventListener('transitionend', hideAfterTransition);
+  }
 }
+
+openBtn?.addEventListener('click', () => {
+  // show immediately, then slide down
+  controls.style.visibility = 'visible';
+  controls.classList.add('is-open');
+});
+
+closeBtn?.addEventListener('click', () => {
+  // slide up, THEN hide on transition end
+  controls.classList.remove('is-open');
+  controls.addEventListener('transitionend', hideAfterTransition);
+});
+
+controls.addEventListener('mouseleave', () => {
+  controls.classList.remove('is-open');
+});
 
 populateModesOnce();
 updateKeyOptions(selectedMode);
