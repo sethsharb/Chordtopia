@@ -1,0 +1,338 @@
+@font-face {
+  font-family: 'Shorai';
+  src: url('fonts/ShoraiSansDemi-8015162.ttf') format('ttf');
+  font-weight: demi;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Shorai';
+  src: url('fonts/ShoraiSansMedium-8015179.ttf') format('ttf');
+  font-weight: medium;
+  font-style: normal;
+}
+
+:root {
+  --padding: 50px;
+}
+
+body {
+  margin: 0;
+  width: 100vw;
+  height: 100vh;
+  min-height: 666px;
+  padding-top: 20px;
+  font-family: 'Shorai', sans-serif;
+  font-weight: demi;
+  font-size: 14pt;
+  background: #8BEB83;
+  color: #fff;
+  text-align: center;
+  transition: background 0.5s ease;
+  overflow: hidden;
+}
+
+button {
+  font-size: 14pt;
+}
+
+
+#bg1,
+#bg2 {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+#bg1 {
+  background-image: url('assets/bg1.png');
+  mix-blend-mode: soft-light;
+  opacity: .54;
+}
+
+#bg2 {
+  background-image: url('assets/bg2.png');
+  mix-blend-mode: exclusion;
+  opacity: .12;
+}
+
+.active {
+  background-color: white;
+  border-radius: .5em;
+  color: black;
+  font-weight: bold;
+}
+
+
+/* ////////////////////////////// */
+/*       Modes and Key Menu       */
+/* ////////////////////////////// */
+
+
+/* Just the Frame around the filters */
+.controls {
+  display: none;
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+  width: 100vw;
+
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+
+  padding: 3em 0;
+  background-color: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(10px);
+  /* This is what does the blurring */
+  -webkit-backdrop-filter: blur(15px);
+}
+
+#closeControls {
+  background: black;
+  border: none;
+  padding: 10px 20px;
+  border-radius: .5em;
+  color: white;
+  cursor: pointer;
+  /* width: 25vw; */
+  margin-top: 25px;
+}
+
+.controls.show {
+  display: flex;
+}
+
+label {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 2em;
+
+  font-size: 16pt;
+}
+
+#mode-select {
+  display: flex;
+  gap: .125em;
+}
+
+.mode-button {
+  cursor: pointer;
+  padding: 10px;
+}
+
+#key-select {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: .125em;
+}
+
+.key-button {
+  cursor: pointer;
+  padding: 10px;
+  width: 30px;
+}
+
+.key-button:hover,
+.mode-button:hover,
+.scale-note:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: .5em;
+}
+
+/* /////////////////////////////////// */
+/*       Modes and Key Menu Ends       */
+/* /////////////////////////////////// */
+/* /////////////////////////////////// */
+/*                Header               */
+/* /////////////////////////////////// */
+
+#header {
+  position: fixed;
+  width: 100%;
+  top: var(--padding);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: first baseline;
+  gap: 1rem;
+}
+
+#active_mode-key {
+  cursor: pointer;
+}
+
+.active_mode-key>div:first-child,
+#scale-container>div:first-child,
+.active_chord>div:first-child {
+  font-size: .75em;
+  text-decoration: underline;
+  text-underline-offset: 7px;
+  margin-bottom: 13px;
+  font-weight: medium;
+}
+
+#scale-display,
+#roman-display {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+  justify-items: center;
+  text-align: center;
+}
+
+#scale-display {
+  margin-bottom: .5em;
+}
+
+.scale-note,
+.roman-display span {
+  text-align: center;
+}
+
+span.scale-note,
+#active_mode-key,
+#active_chord {
+  pointer-events: auto;
+  ;
+  min-width: 1em;
+  min-height: 1em;
+
+  padding: 10px;
+}
+
+span.scale-note,
+#active_mode-key {
+  cursor: pointer !important;
+}
+
+.active_chord {
+  display: none;
+}
+
+.active_chord.show {
+  display: block;
+  /* or flex/grid depending on layout */
+}
+
+/* /////////////////////////////////////// */
+/*               Header Ends               */
+/* /////////////////////////////////////// */
+/* //////////////////////////////////////// */
+/*               Piano Starts               */
+/* //////////////////////////////////////// */
+
+#pianoSvg {
+  height: 50vh;
+  width: 100%;
+  display: block;
+}
+
+#pianoSvg .white-keys image,
+#pianoSvg .black-keys image {
+  opacity: 0.15;
+  transition: opacity 1s ease;
+}
+
+#pianoSvg image.scale-highlight {
+  opacity: 1;
+}
+
+#pianoSvg image.chord-highlight {
+  opacity: 1;
+}
+
+#pianoSvg image:not(.scale-highlight):not(.chord-highlight) {
+  opacity: 0.15;
+}
+
+#pianoSvg {
+  height: auto;
+  width: auto;
+  display: block;
+}
+
+#pianoSvgContainer {
+  height: auto;
+  width: 100%;
+  overflow-x: hidden;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%)
+}
+
+/* ////////////////////////////////////// */
+/*               Piano Ends               */
+/* ////////////////////////////////////// */
+/* /////////////////////////////////////// */
+/*            Chords Inversions            */
+/* /////////////////////////////////////// */
+
+#footer {
+  position: fixed;
+  width: 100%;
+  bottom: var(--padding);
+}
+
+.inversions [data-inversion].active {
+  outline: 2px solid currentColor;
+}
+
+.inversions {
+  position: relative;
+  display: inline-flex;
+  padding: 6px;
+  align-items: center;
+  gap: 4px;
+  border-radius: var(--keys-radius-black-cutout, 16px);
+  background: var(--colors-transparency-black-trans-5, rgba(0, 0, 0, 0.05));
+}
+
+#chord-notes,
+.inversions {
+  display: none;
+}
+
+.inversions button,
+#chord-notes.show,
+.inversions.show {
+  all: unset;
+  display: flex;
+  gap: 2em;
+  padding: 10px 16px;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  border-radius: var(--radius-mode-buttons, 12px);
+}
+
+#chord-notes.show {
+  padding-top: 0;
+}
+
+.inversions button * {
+  color: var(--Colors-White, #FFF);
+  text-transform: capitalize;
+}
+
+.inversions button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* //////////////////////////////////////// */
+/*          Chords Inversions Ends          */
+/* //////////////////////////////////////// */
+
+
+.scale-highlight,
+.chord-highlight {
+  transition: all 3s ease;
+}
