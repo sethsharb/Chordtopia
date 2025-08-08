@@ -426,9 +426,9 @@ button:focus {
   outline: none;
 }
 #chord-search-btn {
-width:24px;
-height:24px;
-padding:0;
+width: 24px;
+height: 24px;
+padding: 0;
 display:inline-flex;
 align-items:center;
 justify-content:center;
@@ -452,8 +452,8 @@ cursor:pointer;
   z-index: 2147483646;
   top: 0;
   right: 0;
-  padding: 10px;
-  gap: .5rem;
+  padding: 1rem;
+  gap: .75rem;
   flex-direction: column;
   flex-wrap: nowrap;
   background: rgba(20, 20, 20, .92);
@@ -461,10 +461,10 @@ cursor:pointer;
   -webkit-backdrop-filter: blur(8px);
   border-radius: 10px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, .35);
-  height: 100%;
+  height: calc(100% - 4rem);
   overflow-y: auto;
-  min-width: 33vw;
-
+  min-width: 25vw;
+  margin: 1rem;
 }
 
 #chord-search-results.chord-search-popover.is-open {
@@ -476,7 +476,7 @@ cursor:pointer;
   display: block;
   width: 100%;
   text-align: left;
-  padding: 8px 10px;
+  padding: 10px;
   border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, .12);
   background: transparent;

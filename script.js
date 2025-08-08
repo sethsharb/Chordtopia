@@ -539,7 +539,7 @@ function renderChordSearchUI() {
           display: 'block',
           width: '100%',
           textAlign: 'center',
-          padding: '8px 10px',
+          padding: '10px',
           borderRadius: '8px',
           border: '1px solid rgba(255,255,255,.12)',
           background: 'transparent',
