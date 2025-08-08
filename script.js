@@ -8,7 +8,12 @@ const ENHARMONIC_MAP = {
   'D#': 'Eb', 'Eb': 'D#',
   'F#': 'Gb', 'Gb': 'F#',
   'G#': 'Ab', 'Ab': 'G#',
-  'A#': 'Bb', 'Bb': 'A#'
+  'A#': 'Bb', 'Bb': 'A#',
+  // Naturals with enharmonic equivalents
+  'E#': 'F',  'F': 'E#',
+  'Fb': 'E',  'E': 'Fb',
+  'Cb': 'B',  'B': 'Cb',
+  'B#': 'C',  'C': 'B#'
 };
 function getNoteLetter(n) {
   return n.replace(/[#b]/, '');
