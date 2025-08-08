@@ -217,6 +217,8 @@ wrap.style.display = 'none';
     });
 
     chordType = newType;
+    // Always reset inversion to root when switching chord type
+    currentInversion = 0;
 
     // If a scale degree is active, rebuild that chord for the new size
     if (lastClickedScaleId && Array.isArray(scaleIDs) && scaleIDs.length) {
@@ -234,8 +236,11 @@ wrap.style.display = 'none';
         return;
       }
     }
-    // Fallback if nothing selected
-    renderInversionButtons(getChordSize());
+    // Fallback if nothing selected: still reset buttons to root
+    const size = getChordSize();
+    currentInversion = 0; // ensure buttons render with Root active
+    renderInversionButtons(size);
+    setActiveInversion(0); // harmless if no chord yet; ensures state is consistent
     renderKeys(scaleIDs, [], 3, 0, true);
     updateChordVisibility();
   });
