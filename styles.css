@@ -83,13 +83,15 @@ button {
   top: 0;
   z-index: 1000;
   width: 100vw;
+  height: 100vh;
 
   display: flex;
   /* keep it rendered */
   flex-direction: column;
   gap: 1rem;
   align-items: center;
-  padding: 3em 0;
+  /* padding: 3em 0; */
+  justify-content: center;
 
   transform: translateY(-100%);
   /* hidden above */
@@ -105,10 +107,8 @@ button {
 }
 
 .controls.is-open {
-  transform: translateY(87.5%);
-  /* slide in */
+  transform: translateY(0);
   visibility: visible;
-  /* visible while open */
 }
 
 /* IMPORTANT: kill this rule if you have it anywhere:
