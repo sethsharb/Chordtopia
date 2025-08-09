@@ -428,7 +428,7 @@ function renderChordSearchUI() {
   wrap.innerHTML = `
   <div class="chord-search-bar">
     <button type="button" id="chord-search-btn" title="Find this chord in other keys &amp; modes" aria-label="Find this chord in other keys and modes"">
-      <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><path fill="white" fill-rule="evenodd" d="m16.325 14.899l5.38 5.38a1.008 1.008 0 0 1-1.427 1.426l-5.38-5.38a8 8 0 1 1 1.426-1.426M10 16a6 6 0 1 0 0-12a6 6 0 0 0 0 12"></path></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" width="85%" height="85%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><path fill="white" fill-rule="evenodd" d="m16.325 14.899l5.38 5.38a1.008 1.008 0 0 1-1.427 1.426l-5.38-5.38a8 8 0 1 1 1.426-1.426M10 16a6 6 0 1 0 0-12a6 6 0 0 0 0 12"></path></svg>
     </button>
     <div id="chord-search-summary"></div>
   </div>
@@ -458,6 +458,20 @@ function renderChordSearchUI() {
   btn.addEventListener('click', () => {
     const matches = findChordInOtherKeys();
     results.innerHTML = '';
+    // Title + content container for the popover
+    results.insertAdjacentHTML(
+      'afterbegin',
+      '<div class="popover-title"></div><div class="popover-content"></div>'
+    );
+    const contentEl = results.querySelector('.popover-content');
+    const titleEl = results.querySelector('.popover-title');
+    const chordLabelEl = document.getElementById('active_chord');
+    const chordHTML = chordLabelEl ? chordLabelEl.innerHTML.trim() : '';
+    if (titleEl) {
+      titleEl.innerHTML = chordHTML
+        ? `Alternative Keys with ${chordHTML}`
+        : 'Alternative Keys';
+    }
     // Ensure the popover can show even after a previous no-match
     summary.textContent = '';
     results.style.display = '';
@@ -475,8 +489,8 @@ function renderChordSearchUI() {
 
     // Temporarily open to measure height
     results.classList.add('is-open');
-    results.style.setProperty('--popover-width', width + 'px');
-    results.style.setProperty('--popover-maxh', maxH + 'px');
+    // results.style.setProperty('--popover-width', width + 'px');
+    // results.style.setProperty('--popover-maxh', maxH + 'px');
 
     // Measure content and choose above/below
     const contentH = Math.min(results.scrollHeight, maxH);
@@ -489,13 +503,16 @@ function renderChordSearchUI() {
     const right = Math.max(viewportPadding, window.innerWidth - rect.right - 6);
 
     // Send computed values to CSS
-    results.style.setProperty('--popover-top', top + 'px');
-    results.style.setProperty('--popover-right', right + 'px');
+    // results.style.setProperty('--popover-top', top + 'px');
+    // results.style.setProperty('--popover-right', right + 'px');
     if (!matches.length) {
       summary.textContent = 'No matches found in other keys/modes.';
       // Keep the popover visible so future searches work normally
       // and show a lightweight message inside the results panel.
-      results.innerHTML = '<div class="no-matches" style="padding:8px 10px;text-align:center;opacity:.85;">No matches found in other keys/modes.</div>';
+      contentEl.innerHTML = '<div class="no-matches">No matches found in other keys/modes.</div>';
+      results.addEventListener('mouseleave', () => {
+        results.classList.remove('is-open');
+      }, { once: true });
     } else {
       // Temporarily disable pointer events on the piano so the popover can be interacted with
       const pianoContainer = document.getElementById('pianoSvgContainer');
@@ -510,10 +527,10 @@ function renderChordSearchUI() {
           top2 = Math.max(viewportPadding, rect2.top - contentH2 - 6);
         }
         const right2 = Math.max(viewportPadding, window.innerWidth - rect2.right - 6);
-        results.style.setProperty('--popover-width', width2 + 'px');
-        results.style.setProperty('--popover-maxh', maxH2 + 'px');
-        results.style.setProperty('--popover-top', top2 + 'px');
-        results.style.setProperty('--popover-right', right2 + 'px');
+        // results.style.setProperty('--popover-width', width2 + 'px');
+        // results.style.setProperty('--popover-maxh', maxH2 + 'px');
+        // results.style.setProperty('--popover-top', top2 + 'px');
+        // results.style.setProperty('--popover-right', right2 + 'px');
       };
       const hide = (ev) => {
         if (ev && (results.contains(ev.target) || btn.contains(ev.target))) return;
@@ -529,26 +546,18 @@ function renderChordSearchUI() {
         window.addEventListener('resize', onResize, true);
         document.addEventListener('mousedown', hide, true);
       }, 0);
+      results.addEventListener('mouseleave', () => {
+        results.classList.remove('is-open');
+        if (pianoContainer) pianoContainer.style.pointerEvents = '';
+        window.removeEventListener('scroll', hide, true);
+        window.removeEventListener('resize', onResize, true);
+        document.removeEventListener('mousedown', hide, true);
+      }, { once: true });
 
-      results.innerHTML = matches.map(m => {
+      contentEl.innerHTML = matches.map(m => {
         const tag = `${supAcc(m.key)} ${m.mode} — ${m.roman}`;
         return `<button type="button" class="chord-match" data-key="${m.key}" data-mode="${m.mode}" data-degree="${m.degree}">${tag}</button>`;
       }).join('');
-      results.querySelectorAll('.chord-match').forEach(b => {
-        Object.assign(b.style, {
-          display: 'block',
-          width: '100%',
-          textAlign: 'center',
-          padding: '10px',
-          borderRadius: '8px',
-          border: '1px solid rgba(255,255,255,.12)',
-          background: 'transparent',
-          color: 'white',
-          cursor: 'pointer'
-        });
-        b.addEventListener('mouseenter', () => b.style.background = 'rgba(255,255,255,.08)');
-        b.addEventListener('mouseleave', () => b.style.background = 'transparent');
-      });
 
       results.querySelectorAll('.chord-match').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -1172,4 +1181,17 @@ renderChordTypeToggle();
 populateModesOnce();
 updateKeyOptions(selectedMode);
 update();
-setPianoScale(1.4);
+
+function readCSSNumberVar(name, el = document.documentElement) {
+  const raw = getComputedStyle(el).getPropertyValue(name);
+  const n = parseFloat((raw || '').trim());
+  return Number.isFinite(n) ? n : null;
+}
+
+window.addEventListener('load', () => {
+  const scaleFromCSS = readCSSNumberVar('--piano-scale');
+  if (scaleFromCSS == null) {
+    console.warn("--piano-scale not found on :root; falling back to 1.4");
+  }
+  setPianoScale(scaleFromCSS ?? 1.4);
+});
