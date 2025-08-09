@@ -173,6 +173,7 @@ button {
   text-underline-offset: 7px;
   margin-bottom: 13px;
   font-weight: medium;
+  white-space: nowrap;
 }
 
 #scale-display,
@@ -200,11 +201,11 @@ span.scale-note,
 #active_mode-key,
 #active_chord {
   pointer-events: auto;
-  ;
   min-width: 1em;
   min-height: 1em;
 
   padding: 10px;
+  white-space: nowrap;
 }
 
 span.scale-note,
@@ -217,7 +218,8 @@ span.scale-note,
 }
 
 .active_chord.show {
-  display: block; /* keep this column of the header as a single block */
+  display: block;
+  /* keep this column of the header as a single block */
 }
 
 /* keep the label on its own line */
@@ -232,6 +234,7 @@ span.scale-note,
   align-items: center;
   vertical-align: middle;
 }
+
 /* .active_chord #chord-search { margin-left: .5rem; } */
 
 /* the search bar inside shouldn't add extra vertical offset */
@@ -281,9 +284,6 @@ span.scale-note,
 /*            Chords Inversions            */
 /* /////////////////////////////////////// */
 
-/* =========================
-   Footer + Chord UI (clean)
-   ========================= */
 
 /* Footer layout */
 #footer {
@@ -306,13 +306,18 @@ span.scale-note,
   align-items: center;
   justify-content: center;
   margin-top: 10px;
-} .chord-note {width: 30px;}
+}
+
+.chord-note {
+  width: 30px;
+}
 
 .inversions {
   display: none;
 }
 
-.inversions.show, .segmented {
+.inversions.show,
+.segmented {
   display: inline-flex;
   gap: .5em;
   align-items: center;
@@ -322,16 +327,24 @@ span.scale-note,
   border-radius: var(--radius-mode-buttons, 12px);
   background: var(--colors-transparency-black-trans-5, rgba(0, 0, 0, 0.05));
 }
-.inversions.show { margin-left: 0.5em; }
-.segmented { margin-right: 0.5em; }
 
-.inversions [data-inversion].active, .segment[aria-pressed="true"] {
+.inversions.show {
+  margin-left: 0.5em;
+}
+
+.segmented {
+  margin-right: 0.5em;
+}
+
+.inversions [data-inversion].active,
+.segment[aria-pressed="true"] {
   outline: 1px solid currentColor;
   font-weight: normal;
 }
 
 /* Inversion buttons */
-.inversions button, .segmented button {
+.inversions button,
+.segmented button {
   appearance: none;
   border: 0;
   background: none;
@@ -345,7 +358,8 @@ span.scale-note,
   text-transform: capitalize;
 }
 
-.inversions button:hover, .segmented button:hover {
+.inversions button:hover,
+.segmented button:hover {
   background: rgba(255, 255, 255, 0.2);
 }
 
@@ -386,11 +400,11 @@ span.scale-note,
   width: max-content;
 }
 
-.inv-btn, .chord-type-btn {
+.inv-btn,
+.chord-type-btn {
   font-size: var(--fontSm);
 }
 
-/* .inversions.show is already inline-flex from Step 1 */
 /* //////////////////////////////////////// */
 /*          Chords Inversions Ends          */
 /* //////////////////////////////////////// */
@@ -413,9 +427,9 @@ button:focus {
 }
 
 .no-matches {
-  padding:8px 10px;
-  text-align:center;
-  opacity:.85;
+  padding: 8px 10px;
+  text-align: center;
+  opacity: .85;
 }
 
 .chord-match {
@@ -424,34 +438,31 @@ button:focus {
   text-align: center;
   padding: 10px;
   border-radius: 8px;
-  border: 1px solid rgba(255,255,255,.12);
+  border: 1px solid rgba(255, 255, 255, .12);
   background: transparent;
   color: white;
   cursor: pointer;
 }
 
-  .chord-match:hover {
-    background: rgba(255,255,255,.08);
-  }
+.chord-match:hover {
+  background: rgba(255, 255, 255, .08);
+}
 
 #chord-search-btn {
-width: 24px;
-height: 24px;
-padding: 0;
-display:inline-flex;
-align-items:center;
-justify-content:center;
-background:none;
-border:none;
-cursor:pointer;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
 }
 
 #chord-search-summary {
-  opacity:.7;
+  opacity: .7;
 }
-
-/* Ensure the piano sits beneath overlays in stacking order */
-
 
 /* Chord search popover (final consolidated) */
 #chord-search-results.chord-search-popover {
@@ -500,19 +511,23 @@ cursor:pointer;
 .chord-line {
   display: flex;
   align-items: center;
-  gap: 0.5rem; /* space between chord text and search */
+  gap: 0.5rem;
+  /* space between chord text and search */
 }
 
 .acc {
   display: inline-block;
   font-size: 0.75em;
   line-height: 0;
-  vertical-align: 0.3em; /* raises the glyph */
+  vertical-align: 0.3em;
+  /* raises the glyph */
 }
 
 #scale-display .scale-note {
-  display: inline-block;   /* not flex */
-  white-space: nowrap;     /* keep letter + accidental together */
+  display: inline-block;
+  /* not flex */
+  white-space: nowrap;
+  /* keep letter + accidental together */
 }
 
 /* #scale-display .scale-note {
@@ -525,12 +540,37 @@ cursor:pointer;
 
 .chord-search-popover .popover-title {
   font-size: var(--fontSm);
-  text-decoration: underline;
-  text-underline-offset: 7px;
   padding: 1rem .75rem;
 }
-.chord-search-popover .popover-content { 
+
+.chord-search-popover .popover-content {
   display: flex;
   flex-direction: column;
-  gap: .75rem; 
+  gap: .75rem;
+}
+
+#closeChordSearch {
+  background: rgba(255, 255, 255, 0.065);
+  color: white;
+  padding: 8px 16px;
+  border-radius: .5em;
+  border: none;
+  text-decoration: none !important;
+  width: 100%;
+  cursor: pointer;
+}
+
+.chord-search-popover .popover-title {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 25px;
+  align-items: baseline;
+  justify-content: center;
+  align-items: center;
+  padding: 0 0 16px;
+}
+
+.popover-heading {
+  text-decoration: underline;
+  text-underline-offset: 7px;
 }

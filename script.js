@@ -461,16 +461,26 @@ function renderChordSearchUI() {
     // Title + content container for the popover
     results.insertAdjacentHTML(
       'afterbegin',
-      '<div class="popover-title"></div><div class="popover-content"></div>'
+      '<div class="popover-title"><div class="popover-heading"></div><button type="button" id="closeChordSearch" class="popover-close" aria-label="Close">✕</button></div><div class="popover-content"></div>'
     );
     const contentEl = results.querySelector('.popover-content');
-    const titleEl = results.querySelector('.popover-title');
+    const titleEl = results.querySelector('.popover-heading');
     const chordLabelEl = document.getElementById('active_chord');
     const chordHTML = chordLabelEl ? chordLabelEl.innerHTML.trim() : '';
     if (titleEl) {
       titleEl.innerHTML = chordHTML
         ? `Alternative Keys with ${chordHTML}`
         : 'Alternative Keys';
+    }
+    // Add close button handler (default: just closes the popover)
+    const closeBtn = results.querySelector('#closeChordSearch');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        results.classList.remove('is-open');
+        const pianoContainer = document.getElementById('pianoSvgContainer');
+        if (pianoContainer) pianoContainer.style.pointerEvents = '';
+      });
     }
     // Ensure the popover can show even after a previous no-match
     summary.textContent = '';
@@ -513,6 +523,7 @@ function renderChordSearchUI() {
       results.addEventListener('mouseleave', () => {
         results.classList.remove('is-open');
       }, { once: true });
+      // (No further changes needed here; default close button handler works)
     } else {
       // Temporarily disable pointer events on the piano so the popover can be interacted with
       const pianoContainer = document.getElementById('pianoSvgContainer');
@@ -540,6 +551,13 @@ function renderChordSearchUI() {
         window.removeEventListener('resize', hide, true);
         document.removeEventListener('mousedown', hide, true);
       };
+      // Wire the close button to the hide() function so it fully dismisses and cleans up listeners
+      if (closeBtn) {
+        closeBtn.addEventListener('click', (ev) => {
+          ev.preventDefault();
+          hide();
+        }, { once: true });
+      }
       // Bind listeners after showing
       setTimeout(() => {
         window.addEventListener('scroll', hide, true);
@@ -1015,7 +1033,7 @@ function update() {
   const activeDisplay = document.getElementById('active_mode-key');
   if (activeDisplay) {
     if (typeof selectedKey === 'string') {
-      activeDisplay.innerHTML = `${supAcc(baseKey)} ${selectedMode} ›`;
+      activeDisplay.innerHTML = `${supAcc(baseKey)} ${selectedMode} <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--iconoir" width="1em" height="1em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m9 6l6 6l-6 6"></path></svg>`;
     }
   }
 }
