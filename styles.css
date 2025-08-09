@@ -29,7 +29,6 @@ body {
   height: 100vh;
   min-height: 666px;
 
-
   font-family: 'SF Pro', Roboto, sans-serif;
   font-weight: demi;
   font-size: 14pt;
@@ -686,12 +685,9 @@ button:focus {
 
   }
 
-  #header {
-    z-index: 1;
-  }
-
   /* ////////// HEADER */
   #header {
+    margin-top: var(--padding);
     position: static;
     left: unset;
     transform: unset;
