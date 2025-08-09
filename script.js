@@ -154,34 +154,34 @@ function isKeyValidForMode(baseKey, mode) {
 }
 
 const KEY_BACKGROUNDS = {
-  'C':  'linear-gradient(90deg, #92de83, #99dea4, #b2d9a4, #99dea4)',
+  'C': 'linear-gradient(90deg, #92de83, #99dea4, #b2d9a4, #99dea4)',
 
   'C#': 'linear-gradient(90deg, #7ee7b3, #8be2c4, #a4dcc4, #95dfc4)',
   'Db': 'linear-gradient(90deg, #7ee7b3, #8be2c4, #a4dcc4, #95dfc4)',
 
-  'D':  'linear-gradient(90deg, #9abaf1, #a3c3e1, #b7c9df, #a3c3e1)',
+  'D': 'linear-gradient(90deg, #9abaf1, #a3c3e1, #b7c9df, #a3c3e1)',
 
   'D#': 'linear-gradient(90deg, #aeabf1, #b8bce1, #c3c1df, #b7bbe1)',
   'Eb': 'linear-gradient(90deg, #aeabf1, #b8bce1, #c3c1df, #b7bbe1)',
 
-  'E':  'linear-gradient(90deg, #e99fa6, #e8a8bd, #debabe, #e7aebd)',
+  'E': 'linear-gradient(90deg, #e99fa6, #e8a8bd, #debabe, #e7aebd)',
 
-  'F':  'linear-gradient(90deg, #e9a38c, #e9aba7, #ddbdaa, #e7b2aa)',
+  'F': 'linear-gradient(90deg, #e9a38c, #e9aba7, #ddbdaa, #e7b2aa)',
 
   'G#': 'linear-gradient(90deg, #e9a38c, #e9aba7, #ddbdaa, #e7b2aa)',
   'Ab': 'linear-gradient(90deg, #e9a38c, #e9aba7, #ddbdaa, #e7b2aa)',
 
-  'G':  'linear-gradient(90deg, #92de83, #99dea4, #b2d9a4, #99dea4)',
+  'G': 'linear-gradient(90deg, #92de83, #99dea4, #b2d9a4, #99dea4)',
 
   'F#': 'linear-gradient(90deg, #7ee7b3, #8be2c4, #a4dcc4, #95dfc4)',
   'Gb': 'linear-gradient(90deg, #7ee7b3, #8be2c4, #a4dcc4, #95dfc4)',
 
-  'A':  'linear-gradient(90deg, #9abaf1, #a3c3e1, #b7c9df, #a3c3e1)',
+  'A': 'linear-gradient(90deg, #9abaf1, #a3c3e1, #b7c9df, #a3c3e1)',
 
   'A#': 'linear-gradient(90deg, #aeabf1, #b8bce1, #c3c1df, #b7bbe1)',
   'Bb': 'linear-gradient(90deg, #aeabf1, #b8bce1, #c3c1df, #b7bbe1)',
 
-  'B':  'linear-gradient(90deg, #e99fa6, #e8a8bd, #debabe, #e7aebd)'
+  'B': 'linear-gradient(90deg, #e99fa6, #e8a8bd, #debabe, #e7aebd)'
 };
 
 function applyBackground(_el, val, fallback = '#8BEB83') {
@@ -226,6 +226,7 @@ function getSizes() {
 function supAcc(str) {
   return String(str).replace(/([♯♭])/g, '<span class="acc">$1</span>');
 }
+const CHORD_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" width=".9em" height=".9em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><path fill="white" fill-rule="evenodd" d="m16.325 14.899l5.38 5.38a1.008 1.008 0 0 1-1.427 1.426l-5.38-5.38a8 8 0 1 1 1.426-1.426M10 16a6 6 0 1 0 0-12a6 6 0 0 0 0 12"></path></svg>`;
 
 // Call this to resize the whole piano (e.g., setPianoScale(1.5) = 150%)
 function setPianoScale(scale = 1) {
@@ -630,8 +631,8 @@ function renderChordSearchUI() {
           const degree = parseInt(btn.dataset.degree, 10) || 0;
           const preserved = baseChordIDs ? baseChordIDs.slice() : null;
           const labelEl = document.getElementById('active_chord');
-          const preservedLabel = labelEl ? labelEl.textContent : null;
-          switchToKeyModeAndDegree(base, mode, degree, preserved, preservedLabel);
+          const preservedLabelHTML = labelEl ? labelEl.innerHTML : null;
+          switchToKeyModeAndDegree(base, mode, degree, preserved, preservedLabelHTML);
         });
       });
     }
@@ -703,7 +704,7 @@ function findChordInOtherKeys() {
   return out;
 }
 
-function switchToKeyModeAndDegree(base, mode, degree, preservedChordIDs = null, preservedLabel = null) {  // Set mode first (rebuilds key options)
+function switchToKeyModeAndDegree(base, mode, degree, preservedChordIDs = null, preservedLabelHTML = null) {  // Set mode first (rebuilds key options)
   selectedMode = mode;
   updateKeyOptions(mode);
 
@@ -766,14 +767,15 @@ function switchToKeyModeAndDegree(base, mode, degree, preservedChordIDs = null, 
 
   const chordDisplay = document.getElementById('active_chord');
   if (chordDisplay) {
-    if (typeof preservedLabel === 'string' && preservedLabel.trim()) {
-      chordDisplay.innerHTML = supAcc(preservedLabel.trim());
+    if (typeof preservedLabelHTML === 'string' && preservedLabelHTML.trim()) {
+      chordDisplay.innerHTML = preservedLabelHTML.trim();
     } else if (baseChordIDs.length) {
       const rootName = (ID_TO_NOTE[baseChordIDs[0]] || '').replace(/\d+$/, '');
       const intervals = idsToIntervals(baseChordIDs);
       const inferred = classifyTriad(intervals) || '';
       const disp = getDisplaySpelling(rootName);
-      chordDisplay.innerHTML = inferred ? `${supAcc(disp)} ${inferred}` : supAcc(disp);
+      const label = inferred ? `${supAcc(disp)} ${inferred}` : supAcc(disp);
+      chordDisplay.innerHTML = `${label} ${CHORD_ICON_SVG}`;
     } else {
       chordDisplay.innerHTML = '';
     }
@@ -1070,7 +1072,7 @@ function update() {
     // Strip octave from note for display (replace digit with empty string)
     if (chordDisplay && note) {
       const base = note.replace(/\d+$/, '');
-      chordDisplay.innerHTML = `${supAcc(getDisplaySpelling(base))} ${quality} <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" width=".9em" height=".9em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><path fill="white" fill-rule="evenodd" d="m16.325 14.899l5.38 5.38a1.008 1.008 0 0 1-1.427 1.426l-5.38-5.38a8 8 0 1 1 1.426-1.426M10 16a6 6 0 1 0 0-12a6 6 0 0 0 0 12"></path></svg>`;
+      chordDisplay.innerHTML = `${supAcc(getDisplaySpelling(base))} ${quality} ${CHORD_ICON_SVG}`;
     }
     // Re-render roman numerals (already done above but safe to include)
     romanDisplay.innerHTML = romanNumerals.map(n => `<span>${n}</span>`).join('');
