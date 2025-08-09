@@ -143,6 +143,7 @@ button {
 /*                Header               */
 /* /////////////////////////////////// */
 
+
 #header {
   position: fixed;
   max-width: 100%;
@@ -151,10 +152,24 @@ button {
   transform: translateX(-50%);
   top: var(--padding);
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: start;
+  text-align: center;
   gap: 4rem;
   z-index: 3;
+}
+
+#header>.active_mode-key,
+#header>.active_chord {
+  justify-self: center;
+  text-align: center;
+}
+
+#header>.active_mode-key,
+#header>.active_chord {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 #active_mode-key {
@@ -190,14 +205,22 @@ button {
   margin-bottom: .5em;
 }
 
-.scale-note,
-.roman-display span {
+.scale-note {
   text-align: center;
   width: 25px;
 }
 
+.roman-display span {
+  text-align: center;
+  width: auto;
+}
+
 .scale-note {
-  font-size: 20pt;
+  font-size: 1.5em;
+}
+
+span.scale-note {
+  padding: 10px;
 }
 
 span.scale-note,
@@ -207,7 +230,7 @@ span.scale-note,
   min-width: 1.25em;
   min-height: 1em;
 
-  padding: 10px;
+  /* padding: 10px; */
   white-space: nowrap;
 }
 
@@ -513,9 +536,8 @@ button:focus {
 .acc {
   display: inline-block;
   font-size: 0.75em;
-  line-height: 0;
-  vertical-align: 0.3em;
-  /* raises the glyph */
+  line-height: 1;
+  vertical-align: super;
 }
 
 #scale-display .scale-note {
@@ -590,8 +612,6 @@ button:focus {
 
 .active_chord {
   display: none;
-  justify-content: center;
-  align-items: baseline;
   gap: 0.25em;
   line-height: 1;
 }
@@ -602,11 +622,9 @@ button:focus {
 }
 
 .active_chord.show {
-  display: block;
+  display: flex;
 }
 
-/* or block, but flex matches your layout */
-
 
 /* /////////////////////////// */
 /* /////////////////////////// */
@@ -622,7 +640,7 @@ button:focus {
 /* /////////////////////////// */
 /* /////////////////////////// */
 
-@media (max-width: 750px) {
+@media (max-width: 650px) {
   :root {
     --piano-scale: 1;
   }
@@ -700,7 +718,7 @@ button:focus {
     display: grid;
     grid-template-columns: 1fr;
 
-    gap: 1em;
+    gap: 2.5em;
   }
 
   /* ---- Single-column layout for mobile: header, piano, footer ---- */
@@ -798,12 +816,44 @@ button:focus {
   button {
     padding: var(--btnPad-Mobile) !important;
   }
+
   #chord-search-results.chord-search-popover {
     left: 0;
   }
+
+  #header>.active_mode-key,
+  #header>.active_chord {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
 }
 
-.scale-note, .roman-display span {
+.scale-note {
   white-space: nowrap;
-  width: max-content;;
+  width: 25px;
+}
+
+.roman-display span {
+  white-space: nowrap;
+  width: auto;
+  display: inline-flex;
+  /* align-items: baseline; */
+  gap: .15em;
+}
+
+.active_chord { 
+  visibility: hidden;          /* keeps layout height */
+  pointer-events: none; 
+}
+
+/* When a chord is active, show it */
+.active_chord.show { 
+  visibility: visible; 
+  pointer-events: auto; 
+}
+
+/* (Optional) if your label is outside that container, hide it too */
+.active_chord:not(.show) .label {
+  visibility: hidden;
 }
