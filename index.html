@@ -3,21 +3,27 @@
 
 <head>
   <meta charset="UTF-8" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Chordtopia">
+
+
   <title>Chordtopia – Piano Visualizer</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 
 <body>
   <div class="controls">
-    <label><div class="label">Mode:</div>
+    <label>
+      <div class="label">Mode:</div>
       <div id="mode-select"></div>
     </label>
-    <label><div class="label">Key:</div>
+    <label>
+      <div class="label">Key:</div>
       <div id="key-select"></div>
     </label>
     <button id="closeControls" style="display:flex; align-items: center; gap:0.5em; line-height:1;">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-        style="width:1em; height:1em; fill:currentColor;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width:1em; height:1em; fill:currentColor;">
         <path
           d="M18.3 5.71a.996.996 0 0 0-1.41 0L12 10.59L7.11 5.7A.996.996 0 1 0 5.7 7.11L10.59 12L5.7 16.89a.996.996 0 1 0 1.41 1.41L12 13.41l4.89 4.89a.996.996 0 1 0 1.41-1.41L13.41 12l4.89-4.89c.38-.38.38-1.02 0-1.4">
         </path>
@@ -50,8 +56,9 @@
   </div>
 
   <div id="footer">
-    <div class="inversions"></div>
     <div id="chord-notes" class="chord-notes"></div>
+
+    <div class="inversions"></div>
   </div>
 
   <div id="bg1"></div>

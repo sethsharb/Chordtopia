@@ -9,8 +9,17 @@
 :root {
   --padding: 50px;
   --btnPadSm: 10px 16px;
+  --btnPad-Mobile: 16px 20px;
+
+  --fontLg: 1.5em;
   --fontSm: .75em;
-  --piano-scale: calc(1.4);
+
+  --radius: .5em;
+
+  --header-row-height: 71.33px;
+
+
+  --piano-scale: 1.4;
 }
 
 body {
@@ -18,14 +27,19 @@ body {
   width: 100vw;
   height: 100vh;
   min-height: 666px;
+
   padding-top: 20px;
+
   font-family: 'SF Pro', Roboto, sans-serif;
   font-weight: demi;
   font-size: 14pt;
+  text-align: center;
+
+
   background: #8BEB83;
   color: #fff;
-  text-align: center;
   transition: background 0.5s ease;
+
   overflow: hidden;
 }
 
@@ -40,7 +54,9 @@ button {
   left: -10vw;
   width: 120vw;
   height: 120vh;
+
   z-index: -1;
+
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
@@ -60,9 +76,9 @@ button {
 
 .active {
   background-color: white;
-  border-radius: .5em;
   color: black;
-  font-weight: bold;
+
+  border-radius: var(--radius);
 }
 
 
@@ -71,16 +87,14 @@ button {
 /* ////////////////////////////// */
 
 
-/* Just the Frame around the filters */
 .controls {
   position: fixed;
   left: 0;
   right: 0;
   top: 0;
   bottom: 0;
-  z-index: 1000;
-  width: 100vw;
-  height: 100vh;
+  z-index: 2;
+  padding: var(--padding);
 
   display: flex;
   flex-direction: column;
@@ -95,7 +109,6 @@ button {
   background-color: rgba(0, 0, 0, .25);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(15px);
-
   visibility: hidden;
 }
 
@@ -105,16 +118,18 @@ button {
 }
 
 #closeControls {
-  background: black;
-  border: none;
-  padding: 10px 20px;
-  border-radius: .5em;
+  background: var(--colors-transparency-black-trans-5, rgba(0, 0, 0, 0.05));
   color: white;
-  cursor: pointer;
-  /* width: 25vw; */
-  margin-top: 25px;
-  position: absolute;
+  padding: 10px 20px;
   bottom: var(--padding);
+
+  border: none;
+  border-radius: .5em;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
 }
 
 #mode-select,
@@ -130,19 +145,23 @@ button {
   cursor: pointer;
   padding: var(--btnPadSm);
   flex: 0 0 auto;
+  border-radius: .5em;
+
 }
 
 .key-button {
   cursor: pointer;
   padding: var(--btnPadSm);
   width: 30px;
+  border-radius: .5em;
+
 }
 
 .key-button:hover,
 .mode-button:hover,
 .scale-note:hover {
   background-color: rgba(255, 255, 255, 0.2);
-  border-radius: .5em;
+  border-radius: var(--radius);
 }
 
 /* /////////////////////////////////// */
@@ -154,13 +173,16 @@ button {
 
 #header {
   position: fixed;
-  width: 100%;
+  max-width: 100%;
+  min-width: 75%;
+  left: 50%;
+  transform: translateX(-50%);
   top: var(--padding);
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: start;
-  gap: 1rem;
-  z-index: 10000;
+  gap: 4rem;
+  z-index: 3;
 }
 
 #active_mode-key {
@@ -169,8 +191,14 @@ button {
 
 .label {
   font-size: var(--fontSm);
-  text-decoration: underline;
-  text-underline-offset: 7px;
+  /* text-decoration: underline; */
+  /* text-underline-offset: 7px; */
+  padding-bottom: 5px;
+  padding-right: 5px;
+  padding-left: 5px;
+  border-bottom: 1px solid currentColor;
+  /* thickness & color */
+
   margin-bottom: 13px;
   font-weight: medium;
   white-space: nowrap;
@@ -194,7 +222,10 @@ button {
 .roman-display span {
   text-align: center;
   width: 25px;
+}
 
+.scale-note {
+  font-size: 1.5em;
 }
 
 span.scale-note,
@@ -213,19 +244,6 @@ span.scale-note,
   cursor: pointer !important;
 }
 
-.active_chord {
-  display: none;
-}
-
-.active_chord.show {
-  display: block;
-  /* keep this column of the header as a single block */
-}
-
-/* keep the label on its own line */
-.active_chord .label {
-  display: block;
-}
 
 /* put active chord text and search on the same line */
 
@@ -238,10 +256,10 @@ span.scale-note,
 }
 
 .chord-search-bar {
-background: #00000025;
-display: inline-flex;
-border-radius: .5em;
-padding: 6px;
+  background: #00000025;
+  display: inline-flex;
+  border-radius: .5em;
+  padding: 6px;
 }
 
 /* /////////////////////////////////////// */
@@ -276,7 +294,7 @@ padding: 6px;
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  z-index: 10;
+  z-index: 1;
 }
 
 /* ////////////////////////////////////// */
@@ -304,14 +322,16 @@ padding: 6px;
   display: flex;
   gap: 2em;
   padding: var(--btnPadSm);
+  padding-bottom: 0;
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  margin-top: 10px;
+  margin-bottom: 1.25em;
 }
 
 .chord-note {
   width: 30px;
+  font-size: 20pt;
 }
 
 .inversions {
@@ -326,8 +346,8 @@ padding: 6px;
   justify-content: center;
   margin: 0 auto;
   padding: 6px;
-  border-radius: var(--radius-mode-buttons, 12px);
-  background: var(--colors-transparency-black-trans-5, rgba(0, 0, 0, 0.05));
+  border-radius: var(--radius);
+  background: rgba(0, 0, 0, 0.125);
 }
 
 .inversions.show {
@@ -354,7 +374,7 @@ padding: 6px;
   gap: 2em;
   padding: 8px 16px;
   align-items: center;
-  border-radius: var(--radius-mode-buttons, 12px);
+  border-radius: var(--radius);
   cursor: pointer;
   color: var(--Colors-White, #FFF);
   text-transform: capitalize;
@@ -581,7 +601,8 @@ button:focus {
   display: none;
 }
 
-.active_chord svg {
+.active_chord svg,
+#active_mode-key svg {
   background: rgba(0, 0, 0, 0.125);
   border-radius: .5em;
   padding: 6px;
@@ -590,11 +611,221 @@ button:focus {
   position: relative;
   top: -0.125em;
   margin-left: 10px;
+  min-width: 16.8px;
+  min-height: 16.8px;
 }
 
 .active_chord {
+  display: none;
   justify-content: center;
   align-items: baseline;
   gap: 0.25em;
   line-height: 1;
+}
+
+/* Active chord is hidden until JS toggles it */
+.active_chord {
+  display: none;
+}
+
+.active_chord.show {
+  display: block;
+}
+
+/* or block, but flex matches your layout */
+
+
+/* /////////////////////////// */
+/* /////////////////////////// */
+/* /////////////////////////// */
+/* /////////////////////////// */
+/* /////////////////////////// */
+/* /////////////////////////// */
+/* /////////////////////////// */
+/* /////////////////////////// */
+/* /////////////////////////// */
+/* /////////////////////////// */
+/* /////////////////////////// */
+/* /////////////////////////// */
+/* /////////////////////////// */
+
+@media (max-width: 750px) {
+  :root {
+    --piano-scale: 1;
+  }
+
+  .controls {
+    display: grid;
+    grid-template-columns: 33% 33%;
+    grid-auto-rows: auto;
+    align-items: start;
+    justify-items: center;
+    gap: 1.5rem;
+    padding: var(--padding);
+    overflow-y: auto;
+  }
+
+  #mode-select,
+  #key-select {
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5em;
+    padding-bottom: 0;
+
+  }
+
+  .mode-button {
+    padding: var(--btnPad-Mobile);
+    width: 88.19px;
+    border: 1px solid white;
+  }
+
+  .key-button {
+    border: 1px solid white;
+    width: 88.19px;
+
+    padding: var(--btnPad-Mobile);
+
+  }
+
+  #closeControls {
+    grid-column: 1 / -1;
+    /* span across both columns */
+    grid-row: 1;
+    justify-self: center;
+    /* center the button */
+    margin-top: .25rem;
+    width: 100%;
+    padding: var(--btnPad-Mobile);
+  }
+
+  #mode-select {
+    grid-row: 2;
+  }
+
+  #key-select {
+    grid-row: 3;
+  }
+
+  .label {
+    margin-bottom: 25px;
+    border-bottom: 0;
+
+  }
+
+  #header {
+    z-index: 1;
+  }
+
+  /* ////////// HEADER */
+  #header {
+    position: static;
+    left: unset;
+    transform: unset;
+    top: auto;
+    grid-area: header;
+    width: 100%;
+    z-index: 1;
+
+    display: grid;
+    grid-template-columns: 1fr;
+
+    gap: 1em;
+  }
+
+  /* ---- Single-column layout for mobile: header, piano, footer ---- */
+  body {
+    display: grid;
+    grid-template-areas:
+      "header"
+      "piano"
+      "footer";
+    align-content: start;
+    row-gap: 2em;
+    height: 100vh;
+  }
+
+  #header .label {
+    text-decoration: none;
+  }
+
+  /* Header at the top of the flow */
+
+  /* Piano container in the middle */
+  #pianoSvgContainer {
+    position: static;
+    /* override absolute */
+    top: auto;
+    transform: none;
+    /* remove translateY centering */
+    grid-area: piano;
+    width: 100%;
+  }
+
+  /* Footer at the bottom of the flow */
+  #footer {
+    position: static;
+    /* override fixed */
+    bottom: auto;
+    grid-area: footer;
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+
+  /* Header active chord container: flex for horizontal alignment (mobile only) */
+  .active_chord.show {
+    display: flex;
+
+  }
+
+  .active_chord .label {
+    display: inline;
+    margin-right: 0.5rem;
+    margin-bottom: 0;
+  }
+
+  /* Active mode/key container: label inline (mobile only) */
+  .active_mode-key {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .active_mode-key .label {
+    display: inline;
+    margin-right: 0.5rem;
+    margin-bottom: 0;
+  }
+
+  /* Scale container: label in left column, scale & romans stacked in right column (mobile only) */
+  #scale-container {
+    /* display: grid; */
+    grid-template-columns: auto;
+    grid-auto-rows: auto;
+    column-gap: 0.5rem;
+    align-items: center;
+    padding: 0 var(--padding);
+  }
+
+  #scale-container .label {
+    all: unset;
+    display: none;
+    /* no bottom margin */
+  }
+
+  #scale-display {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  #roman-display {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .scale-note,
+  button {
+    padding: var(--btnPad-Mobile) !important;
+  }
 }
