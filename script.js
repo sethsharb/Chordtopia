@@ -79,6 +79,90 @@ const MODE_ROMAN_NUMERALS = {
   Locrian: ['i°', 'II', 'iii', 'iv', 'V', 'VI', 'VII']
 };
 
+// Roman numerals for diatonic 7th chords (per mode)
+const MODE_ROMAN_NUMERALS_7 = {
+  Major: [
+    'Imaj<span class="acc">7</span>',
+    'ii<span class="acc">7</span>',
+    'iii<span class="acc">7</span>',
+    'IVmaj<span class="acc">7</span>',
+    'V<span class="acc">7</span>',
+    'vi<span class="acc">7</span>',
+    'viiø<span class="acc">7</span>'
+  ],
+  Dorian: [
+    'i<span class="acc">7</span>',
+    'ii<span class="acc">7</span>',
+    '<span class="acc">♭</span>IIImaj<span class="acc">7</span>',
+    'IV<span class="acc">7</span>',
+    'v<span class="acc">7</span>',
+    'viø<span class="acc">7</span>',
+    '<span class="acc">♭</span>VIImaj<span class="acc">7</span>'
+  ],
+  Phrygian: [
+    'i<span class="acc">7</span>',
+    '<span class="acc">♭</span>IImaj<span class="acc">7</span>',
+    '<span class="acc">♭</span>III<span class="acc">7</span>',
+    'iv<span class="acc">7</span>',
+    'vø<span class="acc">7</span>',
+    '<span class="acc">♭</span>VImaj<span class="acc">7</span>',
+    '<span class="acc">♭</span>vii<span class="acc">7</span>'
+  ],
+  Lydian: [
+    'Imaj<span class="acc">7</span>',
+    'II<span class="acc">7</span>',
+    'iii<span class="acc">7</span>',
+    '#ivø<span class="acc">7</span>',
+    'Vmaj<span class="acc">7</span>',
+    'vi<span class="acc">7</span>',
+    'vii<span class="acc">7</span>'
+  ],
+  Mixolydian: [
+    'I<span class="acc">7</span>',
+    'ii<span class="acc">7</span>',
+    'iiiø<span class="acc">7</span>',
+    'IVmaj<span class="acc">7</span>',
+    'v<span class="acc">7</span>',
+    'vi<span class="acc">7</span>',
+    'VIImaj<span class="acc">7</span>'
+  ],
+  Minor: [
+    'i<span class="acc">7</span>',
+    'iiø<span class="acc">7</span>',
+    'IIImaj<span class="acc">7</span>',
+    'iv<span class="acc">7</span>',
+    'v<span class="acc">7</span>',
+    'VImaj<span class="acc">7</span>',
+    'VII<span class="acc">7</span>'
+  ],
+  Harmonic: [
+    'i(maj<span class="acc">7</span>)',
+    'iiø<span class="acc">7</span>',
+    'III+maj<span class="acc">7</span>',
+    'iv<span class="acc">7</span>',
+    'V<span class="acc">7</span>',
+    'VImaj<span class="acc">7</span>',
+    'vii°<span class="acc">7</span>'
+  ],
+  Melodic: [
+    'i(maj<span class="acc">7</span>)',
+    'ii<span class="acc">7</span>',
+    'III+maj<span class="acc">7</span>',
+    'IV<span class="acc">7</span>',
+    'V<span class="acc">7</span>',
+    'viø<span class="acc">7</span>',
+    'viiø<span class="acc">7</span>'
+  ],
+  Locrian: [
+    'iø<span class="acc">7</span>',
+    'IImaj<span class="acc">7</span>',
+    'iii<span class="acc">7</span>',
+    'iv<span class="acc">7</span>',
+    'Vmaj<span class="acc">7</span>',
+    'VI<span class="acc">7</span>',
+    'vii<span class="acc">7</span>'
+  ]
+};
 // --- Chord quality interval dictionaries (root-relative, in semitones) ---
 const TRIAD_INTERVALS = {
   Major: [0, 4, 7],
@@ -97,6 +181,19 @@ const SEVENTH_INTERVALS = {
   AugmentedMaj7: [0, 4, 8, 11], // +maj7
   Augmented7: [0, 4, 8, 10], // +7
 };
+
+function classifySeventh(intervals) {
+  const dict = new Map([
+    [JSON.stringify(SEVENTH_INTERVALS.Major7), 'Major7'],
+    [JSON.stringify(SEVENTH_INTERVALS.Dominant7), 'Dominant7'],
+    [JSON.stringify(SEVENTH_INTERVALS.Minor7), 'Minor7'],
+    [JSON.stringify(SEVENTH_INTERVALS.HalfDiminished), 'Half-Diminished'],
+    [JSON.stringify(SEVENTH_INTERVALS.Diminished7), 'Diminished7'],
+    [JSON.stringify(SEVENTH_INTERVALS.AugmentedMaj7), 'AugmentedMaj7'],
+    [JSON.stringify(SEVENTH_INTERVALS.Augmented7), 'Augmented7'],
+  ]);
+  return dict.get(JSON.stringify(intervals)) || '';
+}
 
 // Convert a list of absolute note IDs to root-relative semitone intervals (0..11)
 function idsToIntervals(ids) {
@@ -280,6 +377,25 @@ function renderChordTypeToggle() {
   const footer = document.getElementById('footer');
   if (!footer || footer.querySelector('.chord-type-toggle')) return;
 
+  // Ensure a shared flex row exists to hold chord-type toggle and inversions inline
+  let row = footer.querySelector('.footer-controls-row');
+  if (!row) {
+    row = document.createElement('div');
+    row.className = 'footer-controls-row';
+    // Inline styles to avoid depending on external CSS
+    row.style.display = 'inline-flex';
+    row.style.flexWrap = 'wrap';
+    row.style.gap = '8px';
+    row.style.alignItems = 'center';
+    row.style.justifyContent = 'center';
+    const chordNotes = document.getElementById('chord-notes');
+    if (chordNotes && chordNotes.parentElement === footer) {
+      chordNotes.insertAdjacentElement('afterend', row);
+    } else {
+      footer.appendChild(row);
+    }
+  }
+
   const wrap = document.createElement('div');
   wrap.className = 'chord-type-toggle';
   wrap.innerHTML = `
@@ -292,16 +408,18 @@ function renderChordTypeToggle() {
       aria-pressed="false">Sevenths</button>
   </div>
 `;
+  // Ensure the inner segmented group is inline-flex as well
+  const chordTypeSeg = wrap.querySelector('.segmented.chord-type');
+  if (chordTypeSeg) {
+    chordTypeSeg.style.display = 'inline-flex';
+  }
 
   const inversionsContainer = footer.querySelector('.inversions');
-  // Put the toggle directly ABOVE the inversions (no content removed)
-  if (inversionsContainer) {
-    footer.insertBefore(wrap, inversionsContainer);
-  } else {
-    footer.appendChild(wrap);
-  }
-  // Hidden by default; shown only when a chord is active
-  wrap.style.display = 'none';
+  // Place both controls inline inside the shared row
+  if (wrap.parentElement !== row) row.appendChild(wrap);
+  if (inversionsContainer && inversionsContainer.parentElement !== row) row.appendChild(inversionsContainer);
+  // Always shown; keep inline with inversions
+  wrap.style.display = 'inline-flex';
 
   wrap.addEventListener('click', (e) => {
     const btn = e.target.closest('.chord-type-btn');
@@ -332,6 +450,29 @@ function renderChordTypeToggle() {
         const invNoteNames = baseChordIDs.map(id => ID_TO_NOTE[id]).filter(Boolean);
         chordNotesDiv.innerHTML = renderChordNoteLabels(invNoteNames);
         renderKeys([], baseChordIDs, 3, 0, true);
+
+        // Update roman numerals row to match chord size
+        const romanDisplay = document.getElementById('roman-display');
+        if (romanDisplay) {
+          const rSet = (size === 4)
+            ? (MODE_ROMAN_NUMERALS_7[selectedMode] || [])
+            : (MODE_ROMAN_NUMERALS[selectedMode]   || []);
+          romanDisplay.innerHTML = rSet.map(n => `<span>${n}</span>`).join('');
+        }
+
+        // Update the active chord quality label to the correct triad/7th name
+        const chordDisplay = document.getElementById('active_chord');
+        if (chordDisplay && baseChordIDs.length) {
+          const rootName = (ID_TO_NOTE[baseChordIDs[0]] || '').replace(/\d+$/, '');
+          const intervals = idsToIntervals(baseChordIDs);
+          const inferred = (size === 4)
+            ? (classifySeventh(intervals) || '')
+            : (classifyTriad(intervals)   || '');
+          const disp = getDisplaySpelling(rootName);
+          const label = inferred ? `${supAcc(disp)} ${inferred}` : supAcc(disp);
+          chordDisplay.innerHTML = `${label} ${CHORD_ICON_SVG}`;
+        }
+
         updateChordVisibility();
         return;
       }
@@ -342,6 +483,16 @@ function renderChordTypeToggle() {
     renderInversionButtons(size);
     setActiveInversion(0); // harmless if no chord yet; ensures state is consistent
     renderKeys(scaleIDs, [], 3, 0, true);
+
+    // Update roman numerals row to match chord size
+    const romanDisplay = document.getElementById('roman-display');
+    if (romanDisplay) {
+      const rSet = (size === 4)
+        ? (MODE_ROMAN_NUMERALS_7[selectedMode] || [])
+        : (MODE_ROMAN_NUMERALS[selectedMode]   || []);
+      romanDisplay.innerHTML = rSet.map(n => `<span>${n}</span>`).join('');
+    }
+
     updateChordVisibility();
     resetChordSearchUI();
   });
@@ -432,8 +583,11 @@ function updateChordVisibility() {
   document.querySelector('#chord-notes')?.classList.toggle('show', show);
   document.querySelector('.inversions')?.classList.toggle('show', show);
   document.querySelector('.active_chord')?.classList.toggle('show', show);
+  // Make inversions control inline-flex when shown so it sits beside the chord-type toggle
+  const invEl = document.querySelector('.inversions');
+  if (invEl) invEl.style.display = show ? 'inline-flex' : 'none';
   const typeToggle = document.querySelector('.chord-type-toggle');
-  if (typeToggle) typeToggle.style.display = show ? '' : 'none';
+  if (typeToggle) typeToggle.style.display = 'block';
   const searchWrap = document.getElementById('chord-search');
   if (searchWrap) searchWrap.style.display = show ? '' : 'none';
 }
@@ -696,8 +850,9 @@ function findChordInOtherKeys() {
         const candRootLetter = getNoteLetter(candRootName);
         if (candRootLetter !== targetRootLetter) continue;
 
-        const roman = MODE_ROMAN_NUMERALS[mode]?.[degIdx] || '';
-        out.push({ mode, key: base, degree, roman });
+        const roman = (size === 4)
+          ? (MODE_ROMAN_NUMERALS_7[mode]?.[degIdx] || '')
+          : (MODE_ROMAN_NUMERALS[mode]?.[degIdx] || ''); out.push({ mode, key: base, degree, roman });
       }
     }
   }
@@ -772,7 +927,9 @@ function switchToKeyModeAndDegree(base, mode, degree, preservedChordIDs = null, 
     } else if (baseChordIDs.length) {
       const rootName = (ID_TO_NOTE[baseChordIDs[0]] || '').replace(/\d+$/, '');
       const intervals = idsToIntervals(baseChordIDs);
-      const inferred = classifyTriad(intervals) || '';
+      const inferred = (getChordSize() === 4)
+        ? (classifySeventh(intervals) || '')
+        : (classifyTriad(intervals) || '');
       const disp = getDisplaySpelling(rootName);
       const label = inferred ? `${supAcc(disp)} ${inferred}` : supAcc(disp);
       chordDisplay.innerHTML = `${label} ${CHORD_ICON_SVG}`;
@@ -1026,10 +1183,10 @@ function update() {
   ).join('');
   // Render roman numerals
   const romanDisplay = document.getElementById('roman-display');
-  const romanNumerals = MODE_ROMAN_NUMERALS[selectedMode] || [];
-  romanDisplay.innerHTML = romanNumerals.map(n =>
-    `<span>${n}</span>`
-  ).join('');
+  const usingSevenths = getChordSize() === 4;
+  const romanSet = usingSevenths ? (MODE_ROMAN_NUMERALS_7[selectedMode] || [])
+    : (MODE_ROMAN_NUMERALS[selectedMode] || []);
+  romanDisplay.innerHTML = romanSet.map(n => `<span>${n}</span>`).join('');
   // Click handler for scale notes
   scaleDisplay.onclick = e => {
     const target = e.target;
@@ -1063,10 +1220,12 @@ function update() {
     renderInversionButtons(size);
     setActiveInversion(0); // handles rendering and note labels
     const roman = MODE_ROMAN_NUMERALS[selectedMode]?.[index % 7] || '';
-    let quality = qualityFromRoman(roman);
-    if (!quality) {
-      const intervals = idsToIntervals(baseChordIDs);
-      quality = classifyTriad(intervals) || '';
+    let quality = '';
+    const intervals = idsToIntervals(baseChordIDs);
+    if (getChordSize() === 4) {
+      quality = classifySeventh(intervals) || '';
+    } else {
+      quality = qualityFromRoman(roman) || classifyTriad(intervals) || '';
     }
     const chordDisplay = document.getElementById('active_chord');
     // Strip octave from note for display (replace digit with empty string)
@@ -1075,7 +1234,9 @@ function update() {
       chordDisplay.innerHTML = `${supAcc(getDisplaySpelling(base))} ${quality} ${CHORD_ICON_SVG}`;
     }
     // Re-render roman numerals (already done above but safe to include)
-    romanDisplay.innerHTML = romanNumerals.map(n => `<span>${n}</span>`).join('');
+    const rSet = getChordSize() === 4 ? (MODE_ROMAN_NUMERALS_7[selectedMode] || [])
+      : (MODE_ROMAN_NUMERALS[selectedMode] || []);
+    romanDisplay.innerHTML = rSet.map(n => `<span>${n}</span>`).join('');
   };
   const controls = document.querySelector('.controls');
   const activeDisplay = document.getElementById('active_mode-key');

@@ -197,7 +197,7 @@ button {
 }
 
 .scale-note {
-  font-size: 1.5em;
+  font-size: 20pt;
 }
 
 span.scale-note,
@@ -304,6 +304,7 @@ span.scale-note,
 .chord-note {
   width: 30px;
   font-size: 20pt;
+  white-space: nowrap;
 }
 
 .inversions {
@@ -632,29 +633,29 @@ button:focus {
     grid-auto-rows: auto;
     align-items: start;
     justify-items: center;
-    gap: 1.5rem;
+    column-gap: .75rem;
     padding: var(--padding);
     overflow-y: auto;
   }
 
   #mode-select,
   #key-select {
-    flex-direction: column;
+    /* flex-direction: column; */
     align-items: center;
-    gap: 1.5em;
+    gap: .75em;
     padding-bottom: 0;
-
+    width: 100%;
   }
 
   .mode-button {
     padding: var(--btnPad-Mobile);
-    width: 88.19px;
+    width: -webkit-fill-available;
     border: 1px solid white;
   }
 
   .key-button {
     border: 1px solid white;
-    width: 88.19px;
+    width: 100%;
 
     padding: var(--btnPad-Mobile);
 
@@ -797,4 +798,12 @@ button:focus {
   button {
     padding: var(--btnPad-Mobile) !important;
   }
+  #chord-search-results.chord-search-popover {
+    left: 0;
+  }
+}
+
+.scale-note, .roman-display span {
+  white-space: nowrap;
+  width: max-content;;
 }
