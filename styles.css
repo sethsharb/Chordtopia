@@ -36,10 +36,10 @@ button {
 #bg1,
 #bg2 {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  top: -10vh;
+  left: -10vw;
+  width: 120vw;
+  height: 120vh;
   z-index: -1;
   background-size: cover;
   background-repeat: no-repeat;
@@ -228,18 +228,20 @@ span.scale-note,
 }
 
 /* put active chord text and search on the same line */
-.active_chord #active_chord,
-.active_chord #chord-search {
-  display: inline-flex;
-  align-items: center;
-  vertical-align: middle;
-}
+
 
 /* .active_chord #chord-search { margin-left: .5rem; } */
 
 /* the search bar inside shouldn't add extra vertical offset */
 .active_chord #chord-search .chord-search-bar {
   margin-top: 0;
+}
+
+.chord-search-bar {
+background: #00000025;
+display: inline-flex;
+border-radius: .5em;
+padding: 6px;
 }
 
 /* /////////////////////////////////////// */
@@ -570,7 +572,29 @@ button:focus {
   padding: 0 0 16px;
 }
 
-.popover-heading {
+/* .popover-heading {
   text-decoration: underline;
   text-underline-offset: 7px;
+} */
+
+.chord-search-bar {
+  display: none;
+}
+
+.active_chord svg {
+  background: rgba(0, 0, 0, 0.125);
+  border-radius: .5em;
+  padding: 6px;
+  display: inline-block;
+  vertical-align: middle;
+  position: relative;
+  top: -0.125em;
+  margin-left: 10px;
+}
+
+.active_chord {
+  justify-content: center;
+  align-items: baseline;
+  gap: 0.25em;
+  line-height: 1;
 }

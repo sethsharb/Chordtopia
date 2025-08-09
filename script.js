@@ -173,6 +173,24 @@ const KEY_BACKGROUNDS = {
   'B': '#FFAAB2'
 };
 
+function normalizeKeyName(name) {
+  return (name || '').replace(/♯/g, '#').replace(/♭/g, 'b');
+}
+function getKeyBackground(base) {
+  if (!base) return null;
+  // direct match (Unicode or ASCII if provided)
+  if (KEY_BACKGROUNDS[base]) return KEY_BACKGROUNDS[base];
+  // ASCII-normalized version of the base (e.g., F♯ -> F#)
+  const ascii = normalizeKeyName(base);
+  if (KEY_BACKGROUNDS[ascii]) return KEY_BACKGROUNDS[ascii];
+  // Try enharmonic equivalents (both original and ASCII-normalized)
+  const enh = ENHARMONIC_MAP[base];
+  if (enh && KEY_BACKGROUNDS[enh]) return KEY_BACKGROUNDS[enh];
+  const enhAscii = normalizeKeyName(enh || '');
+  if (enhAscii && KEY_BACKGROUNDS[enhAscii]) return KEY_BACKGROUNDS[enhAscii];
+  return null;
+}
+
 // --- Sizing (scalable) ---
 const BASE_WHITE_W = 60;   // your current white key width
 const BASE_WHITE_H = 264;  // your current white key height
@@ -428,7 +446,6 @@ function renderChordSearchUI() {
   wrap.innerHTML = `
   <div class="chord-search-bar">
     <button type="button" id="chord-search-btn" title="Find this chord in other keys &amp; modes" aria-label="Find this chord in other keys and modes"">
-      <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" width="85%" height="85%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><path fill="white" fill-rule="evenodd" d="m16.325 14.899l5.38 5.38a1.008 1.008 0 0 1-1.427 1.426l-5.38-5.38a8 8 0 1 1 1.426-1.426M10 16a6 6 0 1 0 0-12a6 6 0 0 0 0 12"></path></svg>
     </button>
     <div id="chord-search-summary"></div>
   </div>
@@ -455,6 +472,14 @@ function renderChordSearchUI() {
   const results = document.getElementById('chord-search-results');
   const summary = wrap.querySelector('#chord-search-summary');
 
+  // Also open the popover when clicking the active chord label
+  if (activeChordEl) {
+    activeChordEl.style.cursor = 'pointer';
+    activeChordEl.addEventListener('click', () => {
+      btn.click();
+    });
+  }
+
   btn.addEventListener('click', () => {
     const matches = findChordInOtherKeys();
     results.innerHTML = '';
@@ -465,12 +490,17 @@ function renderChordSearchUI() {
     );
     const contentEl = results.querySelector('.popover-content');
     const titleEl = results.querySelector('.popover-heading');
+    // Build a clean, text-only title (strip any SVG/icons from #active_chord)
     const chordLabelEl = document.getElementById('active_chord');
-    const chordHTML = chordLabelEl ? chordLabelEl.innerHTML.trim() : '';
+    let chordText = '';
+    if (chordLabelEl) {
+      const clone = chordLabelEl.cloneNode(true);
+      clone.querySelectorAll('svg').forEach(n => n.remove());
+      chordText = clone.textContent.trim();
+    }
     if (titleEl) {
-      titleEl.innerHTML = chordHTML
-        ? `Alternative Keys with ${chordHTML}`
-        : 'Alternative Keys';
+      // Use textContent so no HTML (including accidental spans or SVG) leaks in
+      titleEl.textContent = chordText ? `Other Keys with ${chordText}` : 'Keys Containing This Chord';
     }
     // Add close button handler (default: just closes the popover)
     const closeBtn = results.querySelector('#closeChordSearch');
@@ -670,7 +700,7 @@ function switchToKeyModeAndDegree(base, mode, degree, preservedChordIDs = null, 
   if (!matching) return;
 
   selectedKey = matching;
-  document.body.style.background = KEY_BACKGROUNDS[base] || document.body.style.background;
+  document.body.style.background = getKeyBackground(base) || document.body.style.background;
 
   // Reflect active classes in the UI lists
   document.querySelectorAll('.mode-button').forEach(b => {
@@ -1024,7 +1054,7 @@ function update() {
     // Strip octave from note for display (replace digit with empty string)
     if (chordDisplay && note) {
       const base = note.replace(/\d+$/, '');
-      chordDisplay.innerHTML = `${supAcc(getDisplaySpelling(base))} ${quality}`;
+      chordDisplay.innerHTML = `${supAcc(getDisplaySpelling(base))} ${quality} <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" width=".9em" height=".9em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><path fill="white" fill-rule="evenodd" d="m16.325 14.899l5.38 5.38a1.008 1.008 0 0 1-1.427 1.426l-5.38-5.38a8 8 0 1 1 1.426-1.426M10 16a6 6 0 1 0 0-12a6 6 0 0 0 0 12"></path></svg>`;
     }
     // Re-render roman numerals (already done above but safe to include)
     romanDisplay.innerHTML = romanNumerals.map(n => `<span>${n}</span>`).join('');
@@ -1124,7 +1154,8 @@ function updateKeyOptions(mode) {
       document.querySelectorAll('.key-button').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       selectedKey = matching;
-      document.body.style.background = KEY_BACKGROUNDS[base] || '#a8e6cf';
+      const bg = getKeyBackground(base);
+      document.body.style.background = bg || '#a8e6cf';
       resetChordDisplay();
       update();
       resetChordSearchUI();
