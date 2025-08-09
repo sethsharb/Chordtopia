@@ -152,7 +152,7 @@ button {
   transform: translateX(-50%);
   top: var(--padding);
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-columns: minmax(15%, 1fr) auto minmax(15%, 1fr);
   align-items: start;
   text-align: center;
   gap: 4rem;
