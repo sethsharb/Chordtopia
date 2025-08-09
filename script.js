@@ -154,24 +154,40 @@ function isKeyValidForMode(baseKey, mode) {
 }
 
 const KEY_BACKGROUNDS = {
-  'C': '#8BEB83',
-  'C#': '#66F4BB',
-  'Db': '#66F4BB',
-  'D': '#A1C9FF',
-  'D#': '#BEBAFF',
-  'Eb': '#BEBAFF',
-  'E': '#FFAAB2',
-  'F': '#FFAF91',
-  'F#': '#f2faa6',
-  'Gb': '#f1faa6',
-  'G': '#8BEB83',
-  'G#': '#66F4BB',
-  'Ab': '#66F4BB',
-  'A': '#A1C9FF',
-  'A#': '#BEBAFF',
-  'Bb': '#BEBAFF',
-  'B': '#FFAAB2'
+  'C':  'linear-gradient(90deg, #92de83, #99dea4, #b2d9a4, #99dea4)',
+
+  'C#': 'linear-gradient(90deg, #7ee7b3, #8be2c4, #a4dcc4, #95dfc4)',
+  'Db': 'linear-gradient(90deg, #7ee7b3, #8be2c4, #a4dcc4, #95dfc4)',
+
+  'D':  'linear-gradient(90deg, #9abaf1, #a3c3e1, #b7c9df, #a3c3e1)',
+
+  'D#': 'linear-gradient(90deg, #aeabf1, #b8bce1, #c3c1df, #b7bbe1)',
+  'Eb': 'linear-gradient(90deg, #aeabf1, #b8bce1, #c3c1df, #b7bbe1)',
+
+  'E':  'linear-gradient(90deg, #e99fa6, #e8a8bd, #debabe, #e7aebd)',
+
+  'F':  'linear-gradient(90deg, #e9a38c, #e9aba7, #ddbdaa, #e7b2aa)',
+
+  'G#': 'linear-gradient(90deg, #e9a38c, #e9aba7, #ddbdaa, #e7b2aa)',
+  'Ab': 'linear-gradient(90deg, #e9a38c, #e9aba7, #ddbdaa, #e7b2aa)',
+
+  'G':  'linear-gradient(90deg, #92de83, #99dea4, #b2d9a4, #99dea4)',
+
+  'F#': 'linear-gradient(90deg, #7ee7b3, #8be2c4, #a4dcc4, #95dfc4)',
+  'Gb': 'linear-gradient(90deg, #7ee7b3, #8be2c4, #a4dcc4, #95dfc4)',
+
+  'A':  'linear-gradient(90deg, #9abaf1, #a3c3e1, #b7c9df, #a3c3e1)',
+
+  'A#': 'linear-gradient(90deg, #aeabf1, #b8bce1, #c3c1df, #b7bbe1)',
+  'Bb': 'linear-gradient(90deg, #aeabf1, #b8bce1, #c3c1df, #b7bbe1)',
+
+  'B':  'linear-gradient(90deg, #e99fa6, #e8a8bd, #debabe, #e7aebd)'
 };
+
+function applyBackground(_el, val, fallback = '#8BEB83') {
+  const v = (typeof val === 'string' && val.trim()) ? val.trim() : fallback;
+  document.documentElement.style.setProperty('--key-bg', v);
+}
 
 function normalizeKeyName(name) {
   return (name || '').replace(/♯/g, '#').replace(/♭/g, 'b');
@@ -700,7 +716,7 @@ function switchToKeyModeAndDegree(base, mode, degree, preservedChordIDs = null, 
   if (!matching) return;
 
   selectedKey = matching;
-  document.body.style.background = getKeyBackground(base) || document.body.style.background;
+  applyBackground(null, getKeyBackground(base), '#8BEB83');
 
   // Reflect active classes in the UI lists
   document.querySelectorAll('.mode-button').forEach(b => {
@@ -1155,7 +1171,7 @@ function updateKeyOptions(mode) {
       btn.classList.add('active');
       selectedKey = matching;
       const bg = getKeyBackground(base);
-      document.body.style.background = bg || '#a8e6cf';
+      applyBackground(null, bg, '#8BEB83');
       resetChordDisplay();
       update();
       resetChordSearchUI();
@@ -1230,6 +1246,13 @@ renderChordTypeToggle();
 populateModesOnce();
 updateKeyOptions(selectedMode);
 update();
+
+// Initialize background gradient for current selection
+(function initBackground() {
+  const base = (typeof selectedKey === 'string') ? selectedKey.slice(0, -1) : 'C';
+  const bg = getKeyBackground(base) || '#8BEB83';
+  applyBackground(null, bg, '#8BEB83');
+})();
 
 function readCSSNumberVar(name, el = document.documentElement) {
   const raw = getComputedStyle(el).getPropertyValue(name);

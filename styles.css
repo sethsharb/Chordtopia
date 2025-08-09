@@ -20,6 +20,7 @@
 
 
   --piano-scale: 1.4;
+  --key-bg: #8BEB83;
 }
 
 body {
@@ -28,7 +29,6 @@ body {
   height: 100vh;
   min-height: 666px;
 
-  padding-top: 20px;
 
   font-family: 'SF Pro', Roboto, sans-serif;
   font-weight: demi;
@@ -36,7 +36,7 @@ body {
   text-align: center;
 
 
-  background: #8BEB83;
+  background: var(--key-bg, #8BEB83);
   color: #fff;
   transition: background 0.5s ease;
 
@@ -45,33 +45,6 @@ body {
 
 button {
   font-size: 14pt;
-}
-
-#bg1,
-#bg2 {
-  position: fixed;
-  top: -10vh;
-  left: -10vw;
-  width: 120vw;
-  height: 120vh;
-
-  z-index: -1;
-
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: center;
-}
-
-#bg1 {
-  background-image: url('assets/bg1.png');
-  mix-blend-mode: soft-light;
-  opacity: .54;
-}
-
-#bg2 {
-  background-image: url('assets/bg2.png');
-  mix-blend-mode: exclusion;
-  opacity: .12;
 }
 
 .active {
@@ -232,7 +205,7 @@ span.scale-note,
 #active_mode-key,
 #active_chord {
   pointer-events: auto;
-  min-width: 1em;
+  min-width: 1.25em;
   min-height: 1em;
 
   padding: 10px;
