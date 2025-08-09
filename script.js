@@ -163,6 +163,17 @@ const MODE_ROMAN_NUMERALS_7 = {
     'vii<span class="acc">7</span>'
   ]
 };
+
+const root = document.documentElement;
+
+
+function enableHover() { root.classList.add('can-hover'); }
+function disableHover() { root.classList.remove('can-hover'); }
+
+window.addEventListener('touchstart', disableHover, { passive: true });
+window.addEventListener('mousemove', enableHover);
+
+enableHover(); // assume hover by default for desktop
 // --- Chord quality interval dictionaries (root-relative, in semitones) ---
 const TRIAD_INTERVALS = {
   Major: [0, 4, 7],
