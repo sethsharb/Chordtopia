@@ -51,26 +51,49 @@ for (let octave = 1; octave <= 7; octave++) {
 }
 
 const MODES = {
-  Major: [2, 2, 1, 2, 2, 2, 1],
+  // Heptatonic (Diatonic) – Major and its modes
+  Major: [2, 2, 1, 2, 2, 2, 1], // Ionian
   Dorian: [2, 1, 2, 2, 2, 1, 2],
   Phrygian: [1, 2, 2, 2, 1, 2, 2],
   Lydian: [2, 2, 2, 1, 2, 2, 1],
   Mixolydian: [2, 2, 1, 2, 2, 1, 2],
-  Minor: [2, 1, 2, 2, 1, 2, 2],
-  Harmonic: [2, 1, 2, 2, 1, 3, 1],
-  Melodic: [2, 1, 2, 2, 2, 2, 1],
-  Locrian: [1, 2, 2, 1, 2, 2, 2]
+  Minor: [2, 1, 2, 2, 1, 2, 2], // Aeolian
+  Locrian: [1, 2, 2, 1, 2, 2, 2],
+
+  // Heptatonic – common variants
+  HarmonicMinor: [2, 1, 2, 2, 1, 3, 1],
+  MelodicMinor: [2, 1, 2, 2, 2, 2, 1], // Jazz (ascending)
+  HarmonicMajor: [2, 2, 1, 2, 1, 3, 1],
+  DoubleHarmonic: [1, 3, 1, 2, 1, 3, 1], // Byzantine / Gypsy major
+
+  // Hexatonic
+  WholeTone: [2, 2, 2, 2, 2, 2],
+  MajorBlues: [2, 1, 1, 3, 2, 3], // 1 2 b3 3 5 6
+  MinorBlues: [3, 2, 1, 1, 3, 2], // 1 b3 4 b5 5 b7
+
+  // Pentatonic
+  MajorPentatonic: [2, 2, 3, 2, 3],
+  MinorPentatonic: [3, 2, 2, 3, 2],
+
+  // Octatonic (Diminished)
+  Diminished_Whole_Half: [2, 1, 2, 1, 2, 1, 2, 1],
+  Diminished_Half_Whole: [1, 2, 1, 2, 1, 2, 1, 2],
+
+  // Chromatic (12-tone)
+  Chromatic: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 };
+
+
 
 const MODE_ROMAN_NUMERALS = {
   Major: ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'],
   Dorian: ['i', 'ii', 'III', 'IV', 'v', 'vi°', 'VII'],
   Phrygian: ['i', 'II', 'III', 'iv', 'v°', 'VI', 'vii'],
-  Lydian: ['I', 'II', 'iii', '#iv°', 'V', 'vi', 'vii'],
+  Lydian: ['I', 'II', 'iii', '<span class="acc">♯</span>iv°', 'V', 'vi', 'vii'],
   Mixolydian: ['I', 'ii', 'iii°', 'IV', 'v', 'vi', 'VII'],
   Minor: ['i', 'ii°', 'III', 'iv', 'v', 'VI', 'VII'],
-  Harmonic: ['i', 'ii°', 'III+', 'iv', 'V', 'VI', 'vii°'],
-  Melodic: ['i', 'ii', 'III', 'IV', 'V', 'vi°', 'vii°'],
+  HarmonicMinor: ['i', 'ii°', 'III+', 'iv', 'V', 'VI', 'vii°'],
+  MelodicMinor: ['i', 'ii', 'III', 'IV', 'V', 'vi°', 'vii°'],
   Locrian: ['i°', 'II', 'iii', 'iv', 'V', 'VI', 'VII']
 };
 
@@ -106,7 +129,7 @@ const MODE_ROMAN_NUMERALS_7 = {
     'Imaj<span class="acc">7</span>',
     'II<span class="acc">7</span>',
     'iii<span class="acc">7</span>',
-    '#ivø<span class="acc">7</span>',
+    '<span class="acc">♯</span>ivø<span class="acc">7</span>',
     'Vmaj<span class="acc">7</span>',
     'vi<span class="acc">7</span>',
     'vii<span class="acc">7</span>'
@@ -129,7 +152,7 @@ const MODE_ROMAN_NUMERALS_7 = {
     'VImaj<span class="acc">7</span>',
     'VII<span class="acc">7</span>'
   ],
-  Harmonic: [
+  HarmonicMinor: [
     'i(maj<span class="acc">7</span>)',
     'iiø<span class="acc">7</span>',
     'III+maj<span class="acc">7</span>',
@@ -138,7 +161,7 @@ const MODE_ROMAN_NUMERALS_7 = {
     'VImaj<span class="acc">7</span>',
     'vii°<span class="acc">7</span>'
   ],
-  Melodic: [
+  MelodicMinor: [
     'i(maj<span class="acc">7</span>)',
     'ii<span class="acc">7</span>',
     'III+maj<span class="acc">7</span>',
@@ -157,6 +180,97 @@ const MODE_ROMAN_NUMERALS_7 = {
     'vii<span class="acc">7</span>'
   ]
 };
+
+// Default key list used when a scale doesn't define a preferred set
+const DEFAULT_KEYS = ['C', 'C♯', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'A♭', 'A', 'B♭', 'B'];
+
+function triadRomanForQuality(baseKey, scalePCs, degreeIndex, quality) {
+  // Start from degree with correct accidentals (e.g., ♭II, ♯iv)
+  const baseWithAcc = degreeRomanWithAccidentals(baseKey, scalePCs, degreeIndex);
+  const caseRomans = (str, toLower) => str.replace(/VII|VI|IV|V|III|II|I/g, m => toLower ? m.toLowerCase() : m);
+
+  switch (quality) {
+    case 'Major': return caseRomans(baseWithAcc, false);
+    case 'Minor': return caseRomans(baseWithAcc, true);
+    case 'Diminished': return caseRomans(baseWithAcc, true) + '°';
+    case 'Augmented': return caseRomans(baseWithAcc, false) + '+';
+    case 'Sus2': return caseRomans(baseWithAcc, false) + '(sus2)';
+    case 'Sus4': return caseRomans(baseWithAcc, false) + '(sus4)';
+    case 'Quartal': return caseRomans(baseWithAcc, false) + '(quartal)';
+    default: return caseRomans(baseWithAcc, false);
+  }
+}
+
+function seventhRomanForQuality(baseKey, scalePCs, degreeIndex, quality7) {
+  // Map the 7th quality to its implied triad flavor
+  const triadFlavor =
+    quality7 === 'Major7' ? 'Major' :
+      quality7 === 'Dominant7' ? 'Major' :
+        quality7 === 'Minor7' ? 'Minor' :
+          (quality7 === 'Half-Diminished' || quality7 === 'Diminished7') ? 'Diminished' :
+            (quality7 === 'AugmentedMaj7' || quality7 === 'Augmented7') ? 'Augmented' :
+              'Major';
+
+  let baseTriad = triadRomanForQuality(baseKey, scalePCs, degreeIndex, triadFlavor);
+
+  switch (quality7) {
+    case 'Major7': return baseTriad.replace(/\+$/, '') + 'maj<span class="acc">7</span>';
+    case 'Dominant7': return baseTriad.replace(/maj(?![^<]*<\/)/i, '').replace(/\+$/, '') + '<span class="acc">7</span>';
+    case 'Minor7': return baseTriad + '<span class="acc">7</span>';
+    case 'Half-Diminished': return baseTriad.replace('°', 'ø') + '<span class="acc">7</span>';
+    case 'Diminished7': return baseTriad + '°<span class="acc">7</span>';
+    case 'AugmentedMaj7': return baseTriad.replace(/\+?$/, '+') + 'maj<span class="acc">7</span>';
+    case 'Augmented7': return baseTriad.replace(/\+?$/, '+') + '<span class="acc">7</span>';
+    default: return baseTriad + '<span class="acc">7</span>';
+  }
+}
+// Generate roman numerals for a given key, mode, and chord size using RELATIVE intervals
+function generateRomanSet(baseKey, modeName, chordSize) {
+  const scalePCs = getScalePitchClasses(baseKey, modeName);
+  const degCount = Array.isArray(MODES[modeName]) ? MODES[modeName].length : 7;
+  if (!Array.isArray(scalePCs) || scalePCs.length !== degCount) {
+    return Array.from({ length: degCount }, (_, i) => 'I'.repeat(i + 1)); // never digits
+  }
+
+  // For non-heptatonic scales (pentatonic, hexatonic, octatonic, whole tone, etc.)
+  // show simple Roman numerals without quality annotations (no "(quartal)", sus, etc.).
+  const useSimple = degCount !== 7;
+  const out = [];
+
+  for (let degree = 0; degree < degCount; degree++) {
+    if (useSimple) {
+      // Non‑heptatonic scales: show simple ordinal Romans (no accidentals, no quality)
+      const SIMPLE_ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+      const base = SIMPLE_ROMAN[degree] || 'I';
+      out.push(chordSize === 4 ? base + '<span class="acc">7</span>' : base);
+      continue;
+    }
+
+    // Original behavior for 7-note (heptatonic) scales
+    const rel = scaleIntervalsAtDegree(scalePCs, degree, chordSize);
+    if (chordSize === 4) {
+      const q7 = classifySeventh(rel) || '';
+      if (q7) {
+        out.push(seventhRomanForQuality(baseKey, scalePCs, degree, q7));
+      } else {
+        out.push(degreeRomanWithAccidentals(baseKey, scalePCs, degree) + '<span class="acc">7</span>');
+      }
+    } else {
+      const q3 = classifyTriadExtended(rel) || '';
+      if (q3) {
+        out.push(triadRomanForQuality(baseKey, scalePCs, degree, q3));
+      } else {
+        out.push(degreeRomanWithAccidentals(baseKey, scalePCs, degree));
+      }
+    }
+  }
+  return out;
+}
+
+function getDegreeCountFor(modeName) {
+  const p = MODES[modeName];
+  return Array.isArray(p) ? p.length : 7;
+}
 
 const root = document.documentElement;
 
@@ -197,6 +311,20 @@ function classifySeventh(intervals) {
   return dict.get(JSON.stringify(intervals)) || '';
 }
 
+// Helper to pretty-print seventh chord qualities for display
+function prettySeventhQuality(q7) {
+  switch (q7) {
+    case 'Major7': return 'maj7';       // Major triad + major 7th
+    case 'Dominant7': return '7';          // Major triad + minor 7th
+    case 'Minor7': return 'm7';         // Minor triad + minor 7th
+    case 'Half-Diminished': return 'ø7';         // m7♭5 (half-diminished)
+    case 'Diminished7': return '°7';         // fully diminished 7th
+    case 'AugmentedMaj7': return 'maj7♯5';     // augmented triad + major 7th
+    case 'Augmented7': return '7♯5';        // augmented triad + minor 7th (a.k.a. aug7)
+    default: return '';
+  }
+}
+
 function idsToIntervals(ids) {
   if (!Array.isArray(ids) || !ids.length) return [];
   const pcs = ids.map(id => {
@@ -215,7 +343,8 @@ function idsToIntervals(ids) {
 
 function scaleIntervalsAtDegree(scalePCs, degree, chordSize) {
   const steps = chordSize === 4 ? [0, 2, 4, 6] : [0, 2, 4];
-  const pcs = steps.map(s => scalePCs[(degree + s) % 7]);
+  const n = scalePCs.length;
+  const pcs = steps.map(s => scalePCs[(degree + s) % n]);
   const root = pcs[0];
   const rel = pcs.map(pc => (pc - root + 12) % 12);
   return Array.from(new Set(rel)).sort((a, b) => a - b);
@@ -231,7 +360,39 @@ function classifyTriad(intervals) {
   return dict[JSON.stringify(intervals)] || '';
 }
 
+const IONIAN_OFFSETS = [0, 2, 4, 5, 7, 9, 11];
+const DEGREE_ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
+
+function degreeRomanWithAccidentals(baseKey, scalePCs, degreeIndex) {
+  const basePC = toPitchClass(baseKey);
+  if (basePC == null || basePC === -1) return String(degreeIndex + 1);
+  const pc = scalePCs[degreeIndex % scalePCs.length];
+  if (pc == null || pc === -1) return String(degreeIndex + 1);
+
+  // Ionian reference for THIS degree (prevents mislabeling like ♯ii instead of ♭III)
+  const ref = (basePC + IONIAN_OFFSETS[degreeIndex % 7]) % 12;
+
+  // Signed difference in semitones, mapped to [-6..+5], then clamped to [-2..+2]
+  let diff = (pc - ref + 12) % 12;       // 0..11
+  if (diff > 6) diff -= 12;              // -> -6..+5
+  if (diff < -2) diff = -2;              // avoid exotic triple flats
+  if (diff > 2) diff = 2;              // avoid exotic triple sharps
+
+  const acc = diff === 0 ? '' : (diff < 0 ? '♭'.repeat(-diff) : '♯'.repeat(diff));
+  return (acc ? `<span class="acc">${acc}</span>` : '') + DEGREE_ROMAN[degreeIndex % 7];
+}
+
+function classifyTriadExtended(intervals) {
+  const triad = classifyTriad(intervals);
+  if (triad) return triad;
+  if (JSON.stringify(intervals) === JSON.stringify([0, 2, 7])) return 'Sus2';
+  if (JSON.stringify(intervals) === JSON.stringify([0, 5, 7])) return 'Sus4';
+  if (JSON.stringify(intervals) === JSON.stringify([0, 5, 10])) return 'Quartal';
+  return '';
+}
+
 const MODE_KEYS = {
+  // Heptatonic families
   Major: ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'F♯', 'G♭', 'G', 'A♭', 'A', 'B♭', 'B'],
   Minor: ['C', 'C♯', 'D', 'D♯', 'E♭', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'B♭', 'B'],
   Dorian: ['C', 'C♯', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'G♯', 'A♭', 'A', 'B♭', 'B'],
@@ -239,12 +400,26 @@ const MODE_KEYS = {
   Lydian: ['C', 'D', 'D♭', 'E', 'E♭', 'F', 'G♭', 'G', 'A♭', 'A', 'B♭', 'B'],
   Mixolydian: ['C', 'D', 'E', 'F', 'F♯', 'G', 'A', 'A♯', 'B', 'B♭', 'C♯', 'D♯', 'G♯'],
   Locrian: ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B', 'B♭'],
-  Harmonic: ['C', 'C♯', 'D', 'D♯', 'E♭', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'B♭', 'B'],
-  Melodic: ['C', 'C♯', 'D', 'D♯', 'E♭', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'B♭', 'B'],
+
+  // Common variants (names match your MODES keys)
+  HarmonicMinor: DEFAULT_KEYS,
+  MelodicMinor: DEFAULT_KEYS,
+  HarmonicMajor: DEFAULT_KEYS,
+  DoubleHarmonic: DEFAULT_KEYS,
+
+  // Hexatonic / Pentatonic / Octatonic / Whole-tone / Chromatic
+  WholeTone: DEFAULT_KEYS,
+  MajorPentatonic: DEFAULT_KEYS,
+  MinorPentatonic: DEFAULT_KEYS,
+  MajorBlues: DEFAULT_KEYS,
+  MinorBlues: DEFAULT_KEYS,
+  Diminished_Whole_Half: DEFAULT_KEYS,
+  Diminished_Half_Whole: DEFAULT_KEYS,
+  Chromatic: DEFAULT_KEYS,
 };
 
 function isKeyValidForMode(baseKey, mode) {
-  const list = MODE_KEYS[mode] || [];
+  const list = MODE_KEYS[mode] || DEFAULT_KEYS;
   return list.includes(baseKey);
 }
 
@@ -320,7 +495,6 @@ function getSizes() {
 function supAcc(str) {
   return String(str).replace(/([♯♭])/g, '<span class="acc">$1</span>');
 }
-const CHORD_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" width=".9em" height=".9em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><path fill="white" fill-rule="evenodd" d="m16.325 14.899l5.38 5.38a1.008 1.008 0 0 1-1.427 1.426l-5.38-5.38a8 8 0 1 1 1.426-1.426M10 16a6 6 0 1 0 0-12a6 6 0 0 0 0 12"></path></svg>`;
 
 function setPianoScale(scale = 1) {
   PIANO_SCALE = scale;
@@ -340,6 +514,227 @@ let baseChordIDs = [];
 let currentInversion = 0;
 let chordType = 'triad';
 let lastClickedScaleId = null;
+
+// --- Progression slots (save up to 6 chords + inversion) ---
+const MAX_SLOTS = 6;
+const chordSlots = Array(MAX_SLOTS).fill(null);
+
+function getActiveChordLabelPlain() {
+  const el = document.querySelector('#active_chord .text');
+  return el ? el.textContent.trim() : '';
+}
+
+function computeCurrentDegree() {
+  const degCount = getDegreeCountFor(selectedMode);
+  if (lastClickedScaleId != null) return (scaleIDs.indexOf(lastClickedScaleId) % degCount + degCount) % degCount;
+  if (!Array.isArray(baseChordIDs) || !baseChordIDs.length) return 0;
+  const rootId = baseChordIDs[0];
+  const idx = scaleIDs.indexOf(rootId);
+  return idx === -1 ? 0 : (idx % degCount);
+}
+
+function snapshotCurrentChord() {
+  const size = getChordSize();
+  if (!Array.isArray(baseChordIDs) || baseChordIDs.length < 3) return null;
+  const ids = baseChordIDs.slice(0, size);
+  const base = selectedKey.slice(0, -1);
+  const mode = selectedMode;
+  const degree = computeCurrentDegree();
+  const labelHTML = (document.querySelector('#active_chord .text')?.innerHTML || '').trim(); const labelPlain = getActiveChordLabelPlain();
+  const inversion = currentInversion || 0;
+  const type = chordType; // 'triad' | 'seventh'
+  return { base, mode, degree, ids, inversion, type, labelHTML, labelPlain };
+}
+
+function setChordTypeUI(newType) {
+  if (newType !== 'triad' && newType !== 'seventh') return;
+  chordType = newType;
+  document.querySelectorAll('.chord-type-btn').forEach(b => {
+    const on = b.dataset.chordType === newType;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+}
+
+function saveChordToSlot(index) {
+  if (index < 0 || index >= MAX_SLOTS) return;
+  const snap = snapshotCurrentChord();
+  if (!snap) return;
+  chordSlots[index] = snap;
+  updateProgressionSlotButton(index);
+}
+
+function clearChordSlot(index) {
+  if (index < 0 || index >= MAX_SLOTS) return;
+  chordSlots[index] = null;
+  updateProgressionSlotButton(index);
+}
+
+function recallChordSlot(index) {
+  const slot = chordSlots[index];
+  if (!slot) return;
+  // Ensure chord type matches before computing size in switch
+  setChordTypeUI(slot.type);
+  // Jump to saved context; re-use preserved IDs and labelHTML
+  switchToKeyModeAndDegree(slot.base, slot.mode, slot.degree, slot.ids, slot.labelHTML);
+  // Restore inversion after switch
+  setActiveInversion(slot.inversion || 0);
+  updateChordVisibility();
+}
+
+function updateProgressionSlotButton(index) {
+  const btn = document.querySelector(`.slot-btn[data-slot="${index}"]`);
+  const del = document.querySelector(`.slot-del[data-slot="${index}"]`);
+  if (!btn) return;
+  const slot = chordSlots[index];
+  if (!slot) {
+    btn.classList.remove('filled');
+    btn.innerHTML = `<span class="slot-index">+</span>`;
+    btn.setAttribute('aria-label', `Empty slot ${index + 1}`);
+    btn.title = `Click to save to slot ${index + 1}`;
+    if (del) {
+      del.disabled = true;
+      del.title = 'Delete';
+      del.hidden = true;            // hide when empty
+      del.setAttribute('aria-hidden', 'true');
+    }
+  } else {
+    btn.classList.add('filled');
+    const invLabel = ordinalLabel(slot.inversion).replace('Root', 'Root');
+    const short = (slot.labelPlain || 'Chord');
+    btn.innerHTML = `<span class="slot-label">${short}</span> <span class="slot-inv">${invLabel}</span>`;
+    btn.setAttribute('aria-label', `Slot ${index + 1}: ${short}, ${invLabel}`);
+    btn.title = 'Click to recall';
+    if (del) {
+      del.disabled = false;
+      del.title = 'Delete';
+      del.hidden = false;           // show when filled
+      del.setAttribute('aria-hidden', 'false');
+    }
+  }
+}
+
+function renderProgressionSlots() {
+  const footer = document.getElementById('footer');
+  if (!footer) return;
+
+  const trigger = document.getElementById('saved-chords-trigger');
+  if (!trigger) return;
+
+  const portal = document.getElementById('saved-chords-popover');
+  if (!portal) return;
+
+  // Hide helper
+  function hidePopover() {
+    portal.classList.remove('is-open');
+    portal.style.display = 'none';
+    trigger.setAttribute('aria-expanded', 'false');
+    // Keep the trigger visible and restore its label
+    if (trigger) trigger.textContent = '＋ New Progression';
+  }
+
+  // Build/refresh inner content
+  function buildContent() {
+    portal.innerHTML = '';
+    portal.insertAdjacentHTML(
+      'afterbegin',
+      '<div class="popover-title">\
+         <div class="popover-heading">Chord Progression</div>\
+         <button type="button" id="closeSavedChords" class="popover-close" aria-label="Close">✕</button>\
+       </div>\
+       <div class="popover-content" id="saved-chords-content"></div>'
+    );
+
+    const content = portal.querySelector('#saved-chords-content');
+    if (content) {
+      // Render six slots just like before, but inside the popover
+      content.innerHTML = Array.from({ length: MAX_SLOTS }, (_, i) =>
+        `<div class="slot" data-slot="${i}">\
+           <button type="button" class="slot-btn" data-slot="${i}" aria-pressed="false" title="Click to save to slot ${i + 1}">\
+             <span class="slot-index">➕</span>\
+           </button>\
+           <button type="button" class="slot-del" data-slot="${i}" aria-label="Delete slot ${i + 1}" title="Delete">✕</button>\
+         </div>`
+      ).join('');
+
+      // Initial paint of labels/titles for all slots
+      for (let i = 0; i < MAX_SLOTS; i++) updateProgressionSlotButton(i);
+
+      // Delegate click handling for save / recall / delete
+      content.addEventListener('click', (e) => {
+        const del = e.target.closest('.slot-del');
+        if (del && content.contains(del)) {
+          const i = parseInt(del.dataset.slot, 10) || 0;
+          clearChordSlot(i);
+          e.stopPropagation();
+          return;
+        }
+        const btn = e.target.closest('.slot-btn');
+        if (!btn || !content.contains(btn)) return;
+        const i = parseInt(btn.dataset.slot, 10) || 0;
+        const slot = chordSlots[i];
+        if (!slot) {
+          // Empty → save current chord
+          saveChordToSlot(i);
+        } else {
+          // Filled → recall (keep popover open)
+          recallChordSlot(i);
+        }
+      });
+    }
+
+    const closeBtn = portal.querySelector('#closeSavedChords');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', (ev) => { ev.preventDefault(); hidePopover(); }, { once: true });
+    }
+  }
+
+  // Position and open the popover near the trigger
+  function openPopover() {
+    buildContent();
+
+    // Show first (so we can measure)
+    portal.style.display = '';
+    portal.classList.add('is-open');
+    trigger.setAttribute('aria-expanded', 'true');
+    // Keep the trigger visible and change its label to indicate it will close the popover
+    if (trigger) trigger.textContent = 'Close Progressions';
+
+    // Position logic (similar to chord search)
+    const rect = trigger.getBoundingClientRect();
+    const viewportPadding = 8;
+    const maxH = window.innerHeight - 2 * viewportPadding;
+    const contentH = Math.min(portal.scrollHeight, maxH);
+    let top = rect.bottom + 6;
+    if (top + contentH > window.innerHeight - viewportPadding) {
+      top = Math.max(viewportPadding, rect.top - contentH - 6);
+    }
+    const left = Math.min(
+      Math.max(viewportPadding, rect.left),
+      Math.max(viewportPadding, window.innerWidth - portal.offsetWidth - viewportPadding)
+    );
+    portal.classList.add('positioned');
+    portal.dataset.top = top;
+    portal.dataset.left = left;
+    portal.style.top = `${top}px`;
+    portal.style.left = `${left}px`;
+
+    // No auto-dismiss handlers: popover stays open until X is clicked.
+  }
+
+  // Attach trigger listener (idempotent)
+  if (!trigger._savedPopoverBound) {
+    trigger.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (portal.classList.contains('is-open')) {
+        hidePopover();
+      } else {
+        openPopover();
+      }
+    });
+    trigger._savedPopoverBound = true;
+  }
+}
 
 function getChordSize() {
   return chordType === 'seventh' ? 4 : 3;
@@ -369,128 +764,116 @@ function renderInversionButtons(count) {
 }
 
 function renderChordTypeToggle() {
-  const footer = document.getElementById('footer');
-  if (!footer || footer.querySelector('.chord-type-toggle')) return;
-
-
-  let row = footer.querySelector('.footer-controls-row');
-  if (!row) {
-    row = document.createElement('div');
-    row.className = 'footer-controls-row';
-
-    row.style.display = 'inline-flex';
-    row.style.flexWrap = 'wrap';
-    row.style.gap = '8px';
-    row.style.alignItems = 'center';
-    row.style.justifyContent = 'center';
-    const chordNotes = document.getElementById('chord-notes');
-    if (chordNotes && chordNotes.parentElement === footer) {
-      chordNotes.insertAdjacentElement('afterend', row);
-    } else {
-      footer.appendChild(row);
-    }
-  }
-
-  const wrap = document.createElement('div');
-  wrap.className = 'chord-type-toggle';
-  wrap.innerHTML = `
- <div class="segmented chord-type" role="group" aria-label="Chord type">
-  <button type="button" data-chord-type="triad"
-   class="chord-type-btn segment active"
-   aria-pressed="true">Triads</button>
-  <button type="button" data-chord-type="seventh"
-   class="chord-type-btn segment"
-   aria-pressed="false">Sevenths</button>
- </div>
-`;
-
-  const chordTypeSeg = wrap.querySelector('.segmented.chord-type');
-  if (chordTypeSeg) {
-    chordTypeSeg.style.display = 'inline-flex';
-  }
-
-  const inversionsContainer = footer.querySelector('.inversions');
-
-  if (wrap.parentElement !== row) row.appendChild(wrap);
-  if (inversionsContainer && inversionsContainer.parentElement !== row) row.appendChild(inversionsContainer);
-
-  wrap.style.display = 'inline-flex';
-
-  wrap.addEventListener('click', (e) => {
+  // Bind once via delegation so it works regardless of wrapper structure
+  if (document._chordTypeBound) return;
+  document.addEventListener('click', (e) => {
     const btn = e.target.closest('.chord-type-btn');
     if (!btn) return;
+    if (!document.contains(btn)) return;
     const newType = btn.dataset.chordType;
-    if (!newType || newType === chordType) return;
+    if (!newType || (newType !== 'triad' && newType !== 'seventh')) return;
+    if (newType === chordType) return;
 
-
-    wrap.querySelectorAll('.chord-type-btn').forEach(b => {
+    // Toggle button states globally
+    document.querySelectorAll('.chord-type-btn').forEach(b => {
       const on = b.dataset.chordType === newType;
       b.classList.toggle('active', on);
       b.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
 
     chordType = newType;
-
     currentInversion = 0;
 
-
+    // Recompute based on last clicked degree if available, else preserve current root if possible
+    const size = getChordSize();
     if (lastClickedScaleId && Array.isArray(scaleIDs) && scaleIDs.length) {
       const idx = scaleIDs.indexOf(lastClickedScaleId);
       if (idx !== -1) {
-        const size = getChordSize();
         baseChordIDs = buildChordIDs(scaleIDs, idx, size);
-        currentInversion = 0;
         renderInversionButtons(size);
         setActiveInversion(0);
         const invNoteNames = baseChordIDs.map(id => ID_TO_NOTE[id]).filter(Boolean);
         chordNotesDiv.innerHTML = renderChordNoteLabels(invNoteNames);
         renderKeys([], baseChordIDs, 3, 0, true);
 
-
         const romanDisplay = document.getElementById('roman-display');
         if (romanDisplay) {
-          const rSet = (size === 4)
-            ? (MODE_ROMAN_NUMERALS_7[selectedMode] || [])
-            : (MODE_ROMAN_NUMERALS[selectedMode] || []);
-          romanDisplay.innerHTML = rSet.map(n => `<span>${n}</span>`).join('');
+          const gen = generateRomanSet(selectedKey.slice(0, -1), selectedMode, size);
+          romanDisplay.innerHTML = gen.map(n => `<span>${n}</span>`).join('');
         }
-
 
         const chordDisplay = document.getElementById('active_chord');
         if (chordDisplay && baseChordIDs.length) {
           const rootName = (ID_TO_NOTE[baseChordIDs[0]] || '').replace(/\d+$/, '');
           const intervals = idsToIntervals(baseChordIDs);
           const inferred = (size === 4)
-            ? (classifySeventh(intervals) || '')
-            : (classifyTriad(intervals) || '');
+            ? prettySeventhQuality(classifySeventh(intervals) || '')
+            : (classifyTriadExtended(intervals) || '');
           const disp = getDisplaySpelling(rootName);
           const label = inferred ? `${supAcc(disp)} ${inferred}` : supAcc(disp);
-          chordDisplay.innerHTML = `${label} ${CHORD_ICON_SVG}`;
+          const t = chordDisplay.querySelector('.text');
+          if (t) t.innerHTML = label;
         }
 
         updateChordVisibility();
+        document._chordTypeBound = true;
         return;
       }
     }
 
-    const size = getChordSize();
-    currentInversion = 0;
+    // Fallback: if we have an existing chord root, preserve its root pitch class when switching sizes
+    if (Array.isArray(baseChordIDs) && baseChordIDs.length) {
+      const oldSize = baseChordIDs.length;
+      const oldRootId = baseChordIDs[0];
+      const sizeNow = getChordSize();
+      // Rebuild from scale using the nearest degree to the old root if available
+      const degreeIdx = scaleIDs.indexOf(oldRootId);
+      if (degreeIdx !== -1) {
+        baseChordIDs = buildChordIDs(scaleIDs, degreeIdx, sizeNow);
+        renderInversionButtons(sizeNow);
+        setActiveInversion(0);
+        const invNoteNames = baseChordIDs.map(id => ID_TO_NOTE[id]).filter(Boolean);
+        chordNotesDiv.innerHTML = renderChordNoteLabels(invNoteNames);
+        renderKeys([], baseChordIDs, 3, 0, true);
+
+        const romanDisplay = document.getElementById('roman-display');
+        if (romanDisplay) {
+          const gen = generateRomanSet(selectedKey.slice(0, -1), selectedMode, sizeNow);
+          romanDisplay.innerHTML = gen.map(n => `<span>${n}</span>`).join('');
+        }
+
+        const chordDisplay = document.getElementById('active_chord');
+        if (chordDisplay && baseChordIDs.length) {
+          const rootName = (ID_TO_NOTE[baseChordIDs[0]] || '').replace(/\d+$/, '');
+          const intervals = idsToIntervals(baseChordIDs);
+          const inferred = (sizeNow === 4)
+            ? prettySeventhQuality(classifySeventh(intervals) || '')
+            : (classifyTriadExtended(intervals) || '');
+          const disp = getDisplaySpelling(rootName);
+          const label = inferred ? `${supAcc(disp)} ${inferred}` : supAcc(disp);
+          const t = chordDisplay.querySelector('.text');
+          if (t) t.innerHTML = label;
+        }
+
+        updateChordVisibility();
+        document._chordTypeBound = true;
+        return;
+      }
+    }
+
+    // Last resort: no degree and no prior chord — just switch UI and clear dependent displays
     renderInversionButtons(size);
     setActiveInversion(0);
     renderKeys(scaleIDs, [], 3, 0, true);
-
-
     const romanDisplay = document.getElementById('roman-display');
     if (romanDisplay) {
-      const rSet = (size === 4)
-        ? (MODE_ROMAN_NUMERALS_7[selectedMode] || [])
-        : (MODE_ROMAN_NUMERALS[selectedMode] || []);
-      romanDisplay.innerHTML = rSet.map(n => `<span>${n}</span>`).join('');
+      const gen = generateRomanSet(selectedKey.slice(0, -1), selectedMode, size);
+      romanDisplay.innerHTML = gen.map(n => `<span>${n}</span>`).join('');
     }
-
     updateChordVisibility();
     resetChordSearchUI();
-  });
+    document._chordTypeBound = true;
+  }, { passive: true });
 }
 function renderChordNoteLabels(noteNames) {
   const scaleSet = new Set(Array.from(document.querySelectorAll('#scale-display .scale-note')).map(el => el.textContent.trim()));
@@ -555,10 +938,9 @@ function getScalePitchClasses(baseKey, mode) {
 }
 
 function chordPitchClassesFromScale(scalePCs, degreeIndex, chordSize) {
-  const idxs = [0, 2, 4];
-  if (chordSize === 4) idxs.push(6);
-  const pcs = idxs.map(step => scalePCs[(degreeIndex + step) % 7]);
-
+  const idxs = chordSize === 4 ? [0, 2, 4, 6] : [0, 2, 4];
+  const n = scalePCs.length;
+  const pcs = idxs.map(step => scalePCs[(degreeIndex + step) % n]);
   return Array.from(new Set(pcs)).sort((a, b) => a - b);
 }
 
@@ -574,12 +956,12 @@ function updateChordVisibility() {
   const show = baseChordIDs.length >= 3;
   document.querySelector('#chord-notes')?.classList.toggle('show', show);
   document.querySelector('.inversions')?.classList.toggle('show', show);
-  document.querySelector('.active_chord')?.classList.toggle('show', show);
+  document.querySelector('#active_chord')?.classList.toggle('show', show);
 
   const invEl = document.querySelector('.inversions');
-  if (invEl) invEl.style.display = show ? 'inline-flex' : 'none';
+  // if (invEl) invEl.style.display = show ? 'inline-flex' : 'none'; // Let CSS control display
   const typeToggle = document.querySelector('.chord-type-toggle');
-  if (typeToggle) typeToggle.style.display = 'block';
+  // if (typeToggle) typeToggle.style.display = 'block';
   const searchWrap = document.getElementById('chord-search');
   if (searchWrap) searchWrap.style.display = show ? '' : 'none';
 }
@@ -591,58 +973,33 @@ function resetChordDisplay() {
   lastClickedScaleId = null;
   chordNotesDiv.textContent = '';
   const chordDisplay = document.getElementById('active_chord');
-  if (chordDisplay) chordDisplay.textContent = '';
-  document.querySelectorAll('.scale-note').forEach(n => n.classList.remove('active'));
+  if (chordDisplay) {
+    const t = chordDisplay.querySelector('.text');
+    if (t) t.textContent = '';
+  } document.querySelectorAll('.scale-note').forEach(n => n.classList.remove('active'));
   setActiveInversion(0);
   updateChordVisibility();
 }
 
 function renderChordSearchUI() {
-  const footer = document.getElementById('footer');
-  if (!footer || document.getElementById('chord-search')) return;
-
-  const wrap = document.createElement('div');
-  wrap.id = 'chord-search';
-  wrap.style.display = 'none';
-
-  wrap.innerHTML = `
- <div class="chord-search-bar">
-  <button type="button" id="chord-search-btn" title="Find this chord in other keys &amp; modes" aria-label="Find this chord in other keys and modes"">
-  </button>
-  <div id="chord-search-summary"></div>
- </div>
-`;
-
-
-  let resultsPortal = document.getElementById('chord-search-results');
-  if (!resultsPortal) {
-    resultsPortal = document.createElement('div');
-    resultsPortal.id = 'chord-search-results';
-    resultsPortal.className = 'chord-search-popover';
-    document.body.appendChild(resultsPortal);
-  }
-
+  const wrap = document.getElementById('chord-search');
+  if (!wrap) return; // require prebuilt placeholder in HTML
+  const results = document.getElementById('chord-search-results');
+  if (!results) return;
 
   const activeChordEl = document.getElementById('active_chord');
-  if (activeChordEl && activeChordEl.parentElement) {
-    activeChordEl.parentElement.insertBefore(wrap, activeChordEl.nextSibling);
-  } else {
-    footer.appendChild(wrap);
+
+  function hidePopover(ev) {
+    if (ev && (results.contains(ev.target) || (activeChordEl && activeChordEl.contains(ev.target)))) return;
+    results.classList.remove('is-open');
+    const pianoContainer = document.getElementById('pianoSvgContainer');
+    if (pianoContainer) pianoContainer.style.pointerEvents = '';
+    window.removeEventListener('scroll', hidePopover, true);
+    window.removeEventListener('resize', hidePopover, true);
+    document.removeEventListener('mousedown', hidePopover, true);
   }
 
-  const btn = wrap.querySelector('#chord-search-btn');
-  const results = document.getElementById('chord-search-results');
-  const summary = wrap.querySelector('#chord-search-summary');
-
-
-  if (activeChordEl) {
-    activeChordEl.style.cursor = 'pointer';
-    activeChordEl.addEventListener('click', () => {
-      btn.click();
-    });
-  }
-
-  btn.addEventListener('click', () => {
+  function openPopover() {
     const matches = findChordInOtherKeys();
     results.innerHTML = '';
 
@@ -653,135 +1010,87 @@ function renderChordSearchUI() {
     const contentEl = results.querySelector('.popover-content');
     const titleEl = results.querySelector('.popover-heading');
 
-    const chordLabelEl = document.getElementById('active_chord');
-    let chordText = '';
-    if (chordLabelEl) {
-      const clone = chordLabelEl.cloneNode(true);
-      clone.querySelectorAll('svg').forEach(n => n.remove());
-      chordText = clone.textContent.trim();
-    }
+    // Build title from current active chord label (without any SVG icons)
+    const chordLabelEl = document.querySelector('#active_chord .text');
+    const chordText = chordLabelEl ? chordLabelEl.textContent.trim() : '';
     if (titleEl) {
-
       titleEl.textContent = chordText ? `Other Keys with ${chordText}` : 'Keys Containing This Chord';
     }
 
     const closeBtn = results.querySelector('#closeChordSearch');
     if (closeBtn) {
-      closeBtn.addEventListener('click', (ev) => {
-        ev.preventDefault();
-        results.classList.remove('is-open');
-        const pianoContainer = document.getElementById('pianoSvgContainer');
-        if (pianoContainer) pianoContainer.style.pointerEvents = '';
-      });
+      closeBtn.addEventListener('click', (ev) => { ev.preventDefault(); hidePopover(); }, { once: true });
     }
 
-    summary.textContent = '';
+    // Show popover
+    const pianoContainer = document.getElementById('pianoSvgContainer');
+    if (pianoContainer) pianoContainer.style.pointerEvents = 'none';
     results.style.display = '';
     results.classList.add('is-open');
 
-
-
-    const rect = btn.getBoundingClientRect();
-    const viewportPadding = 8;
-
-
-    const minWidth = Math.max(260, rect.width);
-    const width = Math.min(minWidth, window.innerWidth - 2 * viewportPadding);
-    const maxH = window.innerHeight - 2 * viewportPadding;
-
-
-    results.classList.add('is-open');
-
-
-
-
-    const contentH = Math.min(results.scrollHeight, maxH);
-    let top = rect.bottom + 6;
-    if (top + contentH > window.innerHeight - viewportPadding) {
-      top = Math.max(viewportPadding, rect.top - contentH - 6);
+    // Optional: position near the active chord label
+    if (activeChordEl) {
+      const rect = activeChordEl.getBoundingClientRect();
+      const viewportPadding = 8;
+      const maxH = window.innerHeight - 2 * viewportPadding;
+      const contentH = Math.min(results.scrollHeight, maxH);
+      let top = rect.bottom + 6;
+      if (top + contentH > window.innerHeight - viewportPadding) {
+        top = Math.max(viewportPadding, rect.top - contentH - 6);
+      }
+      const left = Math.min(
+        Math.max(viewportPadding, rect.left),
+        Math.max(viewportPadding, window.innerWidth - results.offsetWidth - viewportPadding)
+      );
+      results.classList.add('positioned');
+      results.dataset.top = top;
+      results.dataset.left = left;
     }
 
-
-    const right = Math.max(viewportPadding, window.innerWidth - rect.right - 6);
-
-
-
-
     if (!matches.length) {
-      summary.textContent = 'No matches found in other keys/modes.';
-
-
-      contentEl.innerHTML = '<div class="no-matches">No matches found in other keys/modes.</div>';
-      results.addEventListener('mouseleave', () => {
-        results.classList.remove('is-open');
-      }, { once: true });
-
+      if (contentEl) contentEl.innerHTML = '<div class="no-matches">No matches found in other keys/modes.</div>';
+      results.addEventListener('mouseleave', () => { results.classList.remove('is-open'); }, { once: true });
     } else {
-
-      const pianoContainer = document.getElementById('pianoSvgContainer');
-      if (pianoContainer) pianoContainer.style.pointerEvents = 'none';
-      const onResize = () => {
-        const rect2 = btn.getBoundingClientRect();
-        const width2 = Math.min(Math.max(260, rect2.width), window.innerWidth - 2 * viewportPadding);
-        const maxH2 = window.innerHeight - 2 * viewportPadding;
-        const contentH2 = Math.min(results.scrollHeight, maxH2);
-        let top2 = rect2.bottom + 6;
-        if (top2 + contentH2 > window.innerHeight - viewportPadding) {
-          top2 = Math.max(viewportPadding, rect2.top - contentH2 - 6);
-        }
-        const right2 = Math.max(viewportPadding, window.innerWidth - rect2.right - 6);
-
-
-
-
-      };
-      const hide = (ev) => {
-        if (ev && (results.contains(ev.target) || btn.contains(ev.target))) return;
-        results.classList.remove('is-open');
-        if (pianoContainer) pianoContainer.style.pointerEvents = '';
-        window.removeEventListener('scroll', hide, true);
-        window.removeEventListener('resize', hide, true);
-        document.removeEventListener('mousedown', hide, true);
-      };
-
-      if (closeBtn) {
-        closeBtn.addEventListener('click', (ev) => {
-          ev.preventDefault();
-          hide();
-        }, { once: true });
+      if (contentEl) {
+        contentEl.innerHTML = matches.map(m => {
+          const tag = `${supAcc(m.key)} ${formatModeName(m.mode)} — ${m.roman}`;
+          return `<button type="button" class="chord-match" data-key="${m.key}" data-mode="${m.mode}" data-degree="${m.degree}">${tag}</button>`;
+        }).join('');
       }
-
-      setTimeout(() => {
-        window.addEventListener('scroll', hide, true);
-        window.addEventListener('resize', onResize, true);
-        document.addEventListener('mousedown', hide, true);
-      }, 0);
-      results.addEventListener('mouseleave', () => {
-        results.classList.remove('is-open');
-        if (pianoContainer) pianoContainer.style.pointerEvents = '';
-        window.removeEventListener('scroll', hide, true);
-        window.removeEventListener('resize', onResize, true);
-        document.removeEventListener('mousedown', hide, true);
-      }, { once: true });
-
-      contentEl.innerHTML = matches.map(m => {
-        const tag = `${supAcc(m.key)} ${m.mode} — ${m.roman}`;
-        return `<button type="button" class="chord-match" data-key="${m.key}" data-mode="${m.mode}" data-degree="${m.degree}">${tag}</button>`;
-      }).join('');
 
       results.querySelectorAll('.chord-match').forEach(btn => {
         btn.addEventListener('click', () => {
-          const base = btn.dataset.key;
-          const mode = btn.dataset.mode;
-          const degree = parseInt(btn.dataset.degree, 10) || 0;
+          const base = btn.getAttribute('data-key');
+          const mode = btn.getAttribute('data-mode');
+          const degree = parseInt(btn.getAttribute('data-degree'), 10) || 0;
           const preserved = baseChordIDs ? baseChordIDs.slice() : null;
-          const labelEl = document.getElementById('active_chord');
+          const labelEl = document.querySelector('#active_chord .text');
           const preservedLabelHTML = labelEl ? labelEl.innerHTML : null;
           switchToKeyModeAndDegree(base, mode, degree, preserved, preservedLabelHTML);
+          hidePopover();
         });
       });
+
+      setTimeout(() => {
+        window.addEventListener('scroll', hidePopover, true);
+        window.addEventListener('resize', hidePopover, true);
+        document.addEventListener('mousedown', hidePopover, true);
+      }, 0);
+
+      results.addEventListener('mouseleave', () => { hidePopover(); }, { once: true });
     }
-  });
+  }
+
+  // Make the active chord label act as the trigger
+  if (activeChordEl) {
+    activeChordEl.style.cursor = 'pointer';
+    // Also set pointer cursor for the active_mode-key element
+    const activeModeKeyEl = document.getElementById('active_mode-key');
+    if (activeModeKeyEl) {
+      activeModeKeyEl.style.cursor = 'pointer';
+    }
+    activeChordEl.addEventListener('click', openPopover);
+  }
 }
 function transposeChordIDs(ids, oldRootId, newRootId) {
   if (!Array.isArray(ids) || ids.length === 0) return [];
@@ -813,36 +1122,35 @@ function findChordInOtherKeys() {
   const out = [];
 
   for (const mode of Object.keys(MODES)) {
-    const keys = MODE_KEYS[mode] || [];
+    const keys = MODE_KEYS[mode] || DEFAULT_KEYS;
+    const degCount = (MODES[mode] || []).length || 7;
     for (const base of keys) {
       const currentBase = selectedKey ? selectedKey.slice(0, -1) : '';
       if (mode === selectedMode && base === currentBase) continue;
 
       const scalePCs = getScalePitchClasses(base, mode);
-      if (!Array.isArray(scalePCs) || scalePCs.length !== 7 || scalePCs.some(pc => pc === -1)) continue;
+      if (!Array.isArray(scalePCs) || scalePCs.length !== degCount || scalePCs.some(pc => pc === -1)) continue;
 
-      for (let degree = 0; degree < 7; degree++) {
+      for (let degree = 0; degree < degCount; degree++) {
 
         const candIntervals = scaleIntervalsAtDegree(scalePCs, degree, size);
         if (JSON.stringify(candIntervals) !== JSON.stringify(targetIntervals)) continue;
-
 
         const candPCs = chordPitchClassesFromScale(scalePCs, degree, size);
         if (!Array.isArray(candPCs) || candPCs.length !== size) continue;
         if (!samePCSet(candPCs, targetPCs)) continue;
 
-
         const candScaleRaw = getScaleNotes(base, mode) || [];
         const candAdjusted = adjustEnharmonics(candScaleRaw, base) || candScaleRaw;
-        const degIdx = degree % 7;
+        const degIdx = degree % degCount;
         const candRootName = (candAdjusted[degIdx] || candScaleRaw[degIdx] || '');
         if (!candRootName) continue;
         const candRootLetter = getNoteLetter(candRootName);
         if (candRootLetter !== targetRootLetter) continue;
 
-        const roman = (size === 4)
-          ? (MODE_ROMAN_NUMERALS_7[mode]?.[degIdx] || '')
-          : (MODE_ROMAN_NUMERALS[mode]?.[degIdx] || ''); out.push({ mode, key: base, degree, roman });
+        const gen = generateRomanSet(base, mode, size);
+        const roman = gen[degIdx] || String(degIdx + 1);
+        out.push({ key: base, mode, degree: degIdx, roman });
       }
     }
   }
@@ -912,21 +1220,25 @@ function switchToKeyModeAndDegree(base, mode, degree, preservedChordIDs = null, 
 
   const chordDisplay = document.getElementById('active_chord');
   if (chordDisplay) {
-    if (typeof preservedLabelHTML === 'string' && preservedLabelHTML.trim()) {
-      chordDisplay.innerHTML = preservedLabelHTML.trim();
-    } else if (baseChordIDs.length) {
-      const rootName = (ID_TO_NOTE[baseChordIDs[0]] || '').replace(/\d+$/, '');
-      const intervals = idsToIntervals(baseChordIDs);
-      const inferred = (getChordSize() === 4)
-        ? (classifySeventh(intervals) || '')
-        : (classifyTriad(intervals) || '');
-      const disp = getDisplaySpelling(rootName);
-      const label = inferred ? `${supAcc(disp)} ${inferred}` : supAcc(disp);
-      chordDisplay.innerHTML = `${label} ${CHORD_ICON_SVG}`;
-    } else {
-      chordDisplay.innerHTML = '';
+    const t = chordDisplay.querySelector('.text');
+    if (t) {
+      if (typeof preservedLabelHTML === 'string' && preservedLabelHTML.trim()) {
+        t.innerHTML = preservedLabelHTML.trim();
+      } else if (baseChordIDs.length) {
+        const rootName = (ID_TO_NOTE[baseChordIDs[0]] || '').replace(/\d+$/, '');
+        const intervals = idsToIntervals(baseChordIDs);
+        const inferred = (getChordSize() === 4)
+          ? prettySeventhQuality(classifySeventh(intervals) || '')
+          : (classifyTriadExtended(intervals) || '');
+        const disp = getDisplaySpelling(rootName);
+        const label = inferred ? `${supAcc(disp)} ${inferred}` : supAcc(disp);
+        t.innerHTML = label;
+      } else {
+        t.textContent = '';
+      }
     }
   }
+
 }
 
 const keySelect = document.getElementById('key-select');
@@ -938,10 +1250,10 @@ const chordNotesDiv = document.getElementById('chord-notes');
 function getScaleNotesFromX1(x1, modeName) {
   const intervals = MODES[modeName];
   const notes = [x1];
+  if (!intervals || !intervals.length) return notes;
   let current = x1;
-
-  for (let i = 0; i < 21; i++) {
-    const step = intervals[i % 7];
+  for (let i = 0; i < 21; i++) { // enough notes to render/center
+    const step = intervals[i % intervals.length];
     current += step;
     notes.push(current);
   }
@@ -952,25 +1264,49 @@ function getScaleNotes(key, mode) {
   const intervals = MODES[mode];
   if (!intervals) return [];
 
-
   let rootIndex = NOTE_NAMES.indexOf(key);
   if (rootIndex === -1 && ENHARMONIC_MAP[key]) {
     rootIndex = NOTE_NAMES.indexOf(ENHARMONIC_MAP[key]);
   }
   if (rootIndex === -1) return [];
 
-
+  const degreeCount = intervals.length;
   const offsets = [0];
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < degreeCount - 1; i++) {
     offsets.push((offsets[i] + intervals[i]) % 12);
   }
-
 
   return offsets.map(off => NOTE_NAMES[(rootIndex + off) % 12]);
 }
 
 function getNoteNamesFromIDs(ids) {
   return ids.map(id => ID_TO_NOTE[id]);
+}
+function animateScrollX(el, targetLeft, { duration = 350, easing = 'easeInOutQuad' } = {}) {
+  if (!el) return;
+  // Respect reduced motion
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    el.scrollLeft = targetLeft;
+    return;
+  }
+
+  const easings = {
+    linear: t => t,
+    easeInOutQuad: t => (t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2) / 2),
+    easeOutCubic: t => 1 - Math.pow(1 - t, 3),
+  };
+  const ease = easings[easing] || easings.easeInOutQuad;
+
+  const start = el.scrollLeft;
+  const delta = targetLeft - start;
+  const startTime = performance.now();
+
+  function tick(now) {
+    const t = Math.min((now - startTime) / duration, 1);
+    el.scrollLeft = start + delta * ease(t);
+    if (t < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
 }
 
 function renderKeys(scaleIDs = [], chordIDs = [], nOctaves = 2, offset = 0, highlightOnlyInCenter = true) {
@@ -1029,7 +1365,8 @@ function renderKeys(scaleIDs = [], chordIDs = [], nOctaves = 2, offset = 0, high
     img.setAttribute('preserveAspectRatio', 'xMidYMid slice');
     const isCenter = k.octave >= centerOctaveStart && k.octave <= centerOctaveEnd;
     if (!highlightOnlyInCenter || isCenter) {
-      const firstScaleSet = scaleIDs.filter((id, i) => i < 7);
+      const degCount = getDegreeCountFor(selectedMode);
+      const firstScaleSet = scaleIDs.filter((id, i) => i < degCount);
       if (firstScaleSet.includes(k.id)) img.classList.add('scale-highlight');
       if (chordIDs.includes(k.id)) img.classList.add('chord-highlight');
     }
@@ -1081,7 +1418,8 @@ function renderKeys(scaleIDs = [], chordIDs = [], nOctaves = 2, offset = 0, high
     img.setAttribute('preserveAspectRatio', 'xMidYMid slice');
     const isCenter = k.octave >= centerOctaveStart && k.octave <= centerOctaveEnd;
     if (!highlightOnlyInCenter || isCenter) {
-      const firstScaleSet = scaleIDs.filter((id, i) => i < 7);
+      const degCount = getDegreeCountFor(selectedMode);
+      const firstScaleSet = scaleIDs.filter((id, i) => i < degCount);
       if (firstScaleSet.includes(k.id)) img.classList.add('scale-highlight');
       if (chordIDs.includes(k.id)) img.classList.add('chord-highlight');
     }
@@ -1119,7 +1457,7 @@ function renderKeys(scaleIDs = [], chordIDs = [], nOctaves = 2, offset = 0, high
     const centerX = (leftMost + rightMost) / 2;
     const scrollX = centerX - container.clientWidth / 2;
 
-    container.scrollTo({ left: scrollX, behavior: 'smooth' });
+    animateScrollX(container, scrollX, { duration: 550, easing: 'easeOutCubic' });
   });
 }
 
@@ -1137,7 +1475,10 @@ function update() {
     const romanDisplay = document.getElementById('roman-display');
     if (romanDisplay) romanDisplay.innerHTML = '';
     const chordDisplay = document.getElementById('active_chord');
-    if (chordDisplay) chordDisplay.textContent = '';
+    if (chordDisplay) {
+      const t = chordDisplay.querySelector('.text');
+      if (t) t.textContent = '';
+    }
     if (chordNotesDiv) chordNotesDiv.textContent = '';
 
     baseChordIDs = [];
@@ -1158,21 +1499,23 @@ function update() {
 
   const adjustedNames = adjustEnharmonics(baseScaleNames, baseKey);
   scaleNotes = adjustedNames.map((note, i) => note + rawScaleNotes[i].slice(-1));
-  if (scaleNotes.length < 7) return;
+  const degCount = getDegreeCountFor(selectedMode);
+  if (scaleNotes.length < degCount) return;
 
   const scale = scaleNotes.map(n => n.slice(0, -1));
   const adjustedScale = adjustEnharmonics(scale, baseKey);
   renderKeys(scaleIDs, [], 3, 0, false);
 
-  scaleDisplay.innerHTML = adjustedScale.slice(0, 7).map((note, i) =>
+  scaleDisplay.innerHTML = adjustedScale.slice(0, degCount).map((note, i) =>
     `<span class="scale-note" data-note-id="${scaleIDs[i]}" data-degree="${i}">${supAcc(note)}</span>`
   ).join('');
 
   const romanDisplay = document.getElementById('roman-display');
-  const usingSevenths = getChordSize() === 4;
-  const romanSet = usingSevenths ? (MODE_ROMAN_NUMERALS_7[selectedMode] || [])
-    : (MODE_ROMAN_NUMERALS[selectedMode] || []);
-  romanDisplay.innerHTML = romanSet.map(n => `<span>${n}</span>`).join('');
+  if (romanDisplay) {
+    const using7 = getChordSize() === 4;
+    const genSet = generateRomanSet(baseKey, selectedMode, using7 ? 4 : 3);
+    romanDisplay.innerHTML = genSet.map(n => `<span>${n}</span>`).join('');
+  }
 
   scaleDisplay.onclick = e => {
     const target = e.target;
@@ -1205,30 +1548,35 @@ function update() {
     resetChordSearchUI();
     renderInversionButtons(size);
     setActiveInversion(0);
-    const roman = MODE_ROMAN_NUMERALS[selectedMode]?.[index % 7] || '';
-    let quality = '';
+    // Degree count aware roman numeral
+    const degCount = getDegreeCountFor(selectedMode);
+    const using7 = getChordSize() === 4;
+    const genSetClick = generateRomanSet(selectedKey.slice(0, -1), selectedMode, using7 ? 4 : 3);
+    const roman = genSetClick[index % degCount] || '';
     const intervals = idsToIntervals(baseChordIDs);
-    if (getChordSize() === 4) {
-      quality = classifySeventh(intervals) || '';
-    } else {
-      quality = qualityFromRoman(roman) || classifyTriad(intervals) || '';
-    }
+    const quality = using7 ? (prettySeventhQuality(classifySeventh(intervals) || '')) : (classifyTriadExtended(intervals) || '');
     const chordDisplay = document.getElementById('active_chord');
 
     if (chordDisplay && note) {
       const base = note.replace(/\d+$/, '');
-      chordDisplay.innerHTML = `${supAcc(getDisplaySpelling(base))} ${quality} ${CHORD_ICON_SVG}`;
+      const t = chordDisplay.querySelector('.text');
+      if (t) t.innerHTML = `${supAcc(getDisplaySpelling(base))} ${quality}`;
     }
 
-    const rSet = getChordSize() === 4 ? (MODE_ROMAN_NUMERALS_7[selectedMode] || [])
-      : (MODE_ROMAN_NUMERALS[selectedMode] || []);
-    romanDisplay.innerHTML = rSet.map(n => `<span>${n}</span>`).join('');
+    // If slots are visible, refresh their button labels that might include quality text length considerations
+    document.getElementById('progression-slots') && Array.from({ length: MAX_SLOTS }, (_, i) => updateProgressionSlotButton(i));
+
+    // Display correct roman numerals for degree count
+    const using7b = getChordSize() === 4;
+    const gen2 = generateRomanSet(selectedKey.slice(0, -1), selectedMode, using7b ? 4 : 3);
+    romanDisplay.innerHTML = gen2.map(n => `<span>${n}</span>`).join('');
   };
   const controls = document.querySelector('.controls');
   const activeDisplay = document.getElementById('active_mode-key');
   if (activeDisplay) {
     if (typeof selectedKey === 'string') {
-      activeDisplay.innerHTML = `${supAcc(baseKey)} ${selectedMode} <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" width=".9em" height=".9em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 733.81 900.04"><path fill="currentColor" d="M13.15,201.34L206.61,12.4c8.51-8.26,18.28-12.4,29.3-12.4s20.91,3.64,28.17,10.89c7.25,7.26,10.89,16.65,10.89,28.17s-3.76,20.54-11.27,27.79l-80.38,77.39-57.85,49.96,80.01-2.63h488.7c11.52,0,20.97,3.7,28.36,11.09s11.09,16.84,11.09,28.36-3.7,21.04-11.09,28.55-16.84,11.27-28.36,11.27H205.48l-80.01-3.01,57.85,50.34,80.38,77.38c7.51,7.26,11.27,16.4,11.27,27.42s-3.64,20.98-10.89,28.37c-7.26,7.38-16.65,11.08-28.17,11.08s-20.79-4.25-29.3-12.78L13.15,260.69c-8.77-8.26-13.15-18.09-13.15-29.48s4.38-21.35,13.15-29.87ZM720.86,698.69l-193.45,188.95c-8.52,8.26-18.29,12.4-29.31,12.4s-20.92-3.64-28.17-10.89c-7.26-7.28-10.89-16.66-10.89-28.18s3.63-20.28,10.89-27.79l80.77-77.38,57.85-50.34-80.01,3.01H39.82c-11.52,0-21.04-3.69-28.55-11.08s-11.27-16.97-11.27-28.75,3.76-20.97,11.27-28.36c7.51-7.38,17.03-11.09,28.55-11.09h488.71l80.01,3.01-57.85-50.33-80.77-77.39c-7.26-7.25-10.89-16.52-10.89-27.79s3.63-20.91,10.89-28.17,16.65-10.89,28.17-10.89,20.79,4.14,29.31,12.4l193.45,189.32c8.51,8.01,12.82,17.78,12.95,29.3s-4.19,21.55-12.95,30.06Z"/></svg>`;
+      const t = activeDisplay.querySelector('.text');
+      if (t) t.innerHTML = `${supAcc(baseKey)} ${formatModeName(selectedMode)}`;
     }
   }
 }
@@ -1275,7 +1623,7 @@ function populateModesOnce() {
   if (modeSelect.children.length > 0) return;
   Object.keys(MODES).forEach(m => {
     const btn = document.createElement('div');
-    btn.textContent = m;
+    btn.textContent = formatModeName(m);
     btn.dataset.mode = m;
     btn.classList.add('mode-button');
     btn.addEventListener('click', () => {
@@ -1299,7 +1647,7 @@ function populateModesOnce() {
 function updateKeyOptions(mode) {
   keySelect.innerHTML = '';
 
-  const validKeys = MODE_KEYS[selectedMode] || [];
+  const validKeys = MODE_KEYS[selectedMode] || DEFAULT_KEYS;
   validKeys.forEach(base => {
 
     let matching = Object.keys(NOTE_MAP).find(n => n === base + '4') ||
@@ -1388,6 +1736,7 @@ renderChordTypeToggle();
 populateModesOnce();
 updateKeyOptions(selectedMode);
 update();
+renderProgressionSlots();
 
 (function initBackground() {
   const base = (typeof selectedKey === 'string') ? selectedKey.slice(0, -1) : 'C';
@@ -1408,3 +1757,11 @@ window.addEventListener('load', () => {
   }
   setPianoScale(scaleFromCSS ?? 1.4);
 });
+
+function formatModeName(name) {
+  return String(name)
+    .replace(/_/g, ' ')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')        // camel→space
+    .replace(/([A-Z])([A-Z][a-z])/g, '$1 $2')   // acronym→word
+    .trim();
+}

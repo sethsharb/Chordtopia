@@ -5,269 +5,59 @@
   font-style: normal;
 }
 
-
-:root {
-  --padding: 50px;
-  --btnPadSm: 10px 16px;
-  --btnPad-Mobile: 16px 20px;
-
-  --fontLg: 1.5em;
-  --fontSm: .75em;
-
-  --radius: .5em;
-
-  --header-row-height: 71.33px;
-
-
-  --piano-scale: 1.4;
-  --key-bg: #8BEB83;
-}
-
-body {
-  margin: 0;
-  width: 100vw;
-  height: 100vh;
-  min-height: 666px;
-
-  font-family: 'SF Pro', Roboto, sans-serif;
-  font-weight: demi;
-  font-size: 14pt;
-  text-align: center;
-
-
-  background: var(--key-bg, #8BEB83);
-  color: #fff;
-  transition: background 0.5s ease;
-
-  overflow: hidden;
-}
-
 button {
-  font-size: 14pt;
+  all: unset;
 }
-
-.active {
-  background-color: white;
-  color: black;
-
-  border-radius: var(--radius);
-}
-
-
-/* ////////////////////////////// */
-/*       Modes and Key Menu       */
-/* ////////////////////////////// */
-
 
 .controls {
-  position: fixed;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  z-index: 2;
-  padding: var(--padding);
-
-  display: flex;
-  flex-direction: column;
-  gap: 3rem;
-  align-items: center;
-  justify-content: center;
-
-  transform: translateY(-100%);
-  transition: transform .4s ease;
-  will-change: transform;
-
-  background-color: rgba(0, 0, 0, .25);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(15px);
   visibility: hidden;
+  transform: translateY(-100%);
 }
 
 .controls.is-open {
-  transform: translateY(0);
   visibility: visible;
+  transform: translateY(0);
 }
 
-#closeControls {
-  background: var(--colors-transparency-black-trans-5, rgba(0, 0, 0, 0.05));
-  color: white;
-  padding: 10px 20px;
-  bottom: var(--padding);
-
-  border: none;
-  border-radius: .5em;
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-}
-
-#mode-select,
-#key-select {
-  display: flex;
-  flex-wrap: wrap;
-  gap: .125em;
-  justify-content: center;
-  align-items: baseline;
-}
-
-.mode-button {
-  cursor: pointer;
-  padding: var(--btnPadSm);
-  flex: 0 0 auto;
-  border-radius: .5em;
-
-}
-
-.key-button {
-  cursor: pointer;
-  padding: var(--btnPadSm);
-  width: 30px;
-  border-radius: .5em;
-
-}
-
-.key-button:hover,
-.mode-button:hover,
-.scale-note:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-  border-radius: var(--radius);
-}
-
-/* /////////////////////////////////// */
-/*       Modes and Key Menu Ends       */
-/* /////////////////////////////////// */
-/* /////////////////////////////////// */
-/*                Header               */
-/* /////////////////////////////////// */
-
-
-#header {
-  position: fixed;
-  max-width: 100%;
-  min-width: 75%;
-  left: 50%;
-  transform: translateX(-50%);
-  top: var(--padding);
-  display: grid;
-  grid-template-columns: minmax(15%, 1fr) auto minmax(15%, 1fr);
-  align-items: start;
-  text-align: center;
-  gap: 4rem;
-  z-index: 3;
-}
-
-#header>.active_mode-key,
-#header>.active_chord {
-  justify-self: center;
-  text-align: center;
-}
-
-#header>.active_mode-key,
-#header>.active_chord {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-#active_mode-key {
-  cursor: pointer;
-}
-
-.label {
-  font-size: var(--fontSm);
-  /* text-decoration: underline; */
-  /* text-underline-offset: 7px; */
-  padding-bottom: 5px;
-  padding-right: 5px;
-  padding-left: 5px;
-  border-bottom: 1px solid currentColor;
-  /* thickness & color */
-
-  margin-bottom: 13px;
-  font-weight: medium;
-  white-space: nowrap;
-}
-
-#scale-display,
-#roman-display {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 0.5rem;
-  justify-items: center;
-  text-align: center;
-  align-items: baseline;
-}
-
-#scale-display {
-  margin-bottom: .5em;
-}
-
-.scale-note {
-  text-align: center;
-  width: 25px;
-}
-
-.roman-display span {
-  text-align: center;
-  width: auto;
-}
-
-.scale-note {
-  font-size: 1.5em;
-}
-
-span.scale-note {
-  padding: 10px;
-}
-
-span.scale-note,
-#active_mode-key,
 #active_chord {
-  pointer-events: auto;
-  min-width: 1.25em;
-  min-height: 1em;
-
-  /* padding: 10px; */
-  white-space: nowrap;
+  display: none;
 }
-
-span.scale-note,
-#active_mode-key {
-  cursor: pointer !important;
+#active_chord.show {
+  display: flex;
 }
 
 
-/* put active chord text and search on the same line */
-
-
-/* .active_chord #chord-search { margin-left: .5rem; } */
-
-/* the search bar inside shouldn't add extra vertical offset */
-.active_chord #chord-search .chord-search-bar {
-  margin-top: 0;
+#chord-notes {
+  display: none;
 }
 
-.chord-search-bar {
-  background: #00000025;
-  display: inline-flex;
-  border-radius: .5em;
-  padding: 6px;
+#chord-notes.show {
+  display: grid;
 }
 
-/* /////////////////////////////////////// */
-/*               Header Ends               */
-/* /////////////////////////////////////// */
-/* //////////////////////////////////////// */
-/*               Piano Starts               */
-/* //////////////////////////////////////// */
+.inversions {
+  display: none;
+}
 
-#pianoSvg {
-  height: 50vh;
-  width: 100%;
-  display: block;
+.inversions.show {
+  display: grid;
+}
+
+/* .segmented .segment[aria-pressed="true"],
+.chord-type-btn[aria-pressed="true"] {  } */
+
+.chord-search-popover {
+  display: none;
+}
+
+.chord-search-popover.is-open {
+  display: grid;
+}
+
+/* .slot .slot-btn.filled {  } */
+
+.slot .slot-del[hidden] {
+  display: none !important;
 }
 
 #pianoSvg image.scale-highlight {
@@ -282,7 +72,352 @@ span.scale-note,
   opacity: 0.15;
 }
 
+
+:root {
+  --sectionPadding: 25px;
+  --sectionPaddingSm: 12px;
+
+  --btnPadSm: 4px 4px;
+  --btnPadMd: 8px 16px;
+  --gapSpace: 10px;
+
+  --fontReg: 12pt;
+  --fontLg: 1.5em;
+  --fontSm: .75em;
+
+  --radiusSm: 6px;
+  --radiusLg: 12px;
+
+  --piano-scale: 1.4;
+  --key-bg: #8BEB83;
+
+  --padding: 35px;
+
+  --blackTrans1: rgba(0, 0, 0, 0.05);
+  --whiteTrans1: rgba(255, 255, 255, 0.1);
+  --blackPopover: rgba(20,20,20,.9);
+}
+
+@media (max-width: 768px) {:root { --piano-scale: 1; }}
+@media (max-height: 721px) {:root { --piano-scale: .75; }}
+
+body {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr auto 1fr auto;
+  grid-template-areas:
+    "header"
+    "piano"
+    "footer"
+    "saved";
+  margin: 0;
+  width: 100vw;
+  height: 100vh;
+
+  font-family: 'SF Pro', Roboto, sans-serif; font-weight: normal;
+  font-size: var(--fontReg);
+  text-align: center;
+
+  background: var(--key-bg);
+  color: #ffffff;
+  transition: background 0.5s ease;
+
+  overflow: hidden;
+}
+#header {grid-area: header;}
+#pianoSvgContainer {grid-area: piano;}
+#footer {grid-area: footer;}
+#saved-chords-popover {grid-area: saved;}
+
+button {
+  font-size: var(--fontReg);
+  border-radius: var(--radiusSm);
+  cursor: pointer;
+}
+
+.acc {
+  white-space: nowrap;
+  font-size: 0.6em;
+  line-height: .85;
+  vertical-align: super;
+  width: .75em;
+  display: inline-flex; 
+  justify-content: center; 
+  align-items: baseline;
+  font-weight: inherit;
+}
+
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Controls */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Controls */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Controls */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Controls */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Controls */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Controls */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Controls */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Controls */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Controls */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Controls */
+
+
+  .controls {
+    position: fixed;
+    left: 0;  right: 0;  top: 0;  bottom: 0;
+    z-index: 2;
+    padding-top: 22.5%;
+    padding: 22.5% 20% var(--sectionPadding) 20%;
+
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      "close close"
+      "mode  key";
+    gap: var(--sectionPadding);
+    justify-content: center;
+    justify-items: stretch;
+
+    transform: translateY(-100%);
+    transition: transform .4s ease;
+    will-change: transform;
+    overflow-y: scroll;
+
+    background-color: rgba(0, 0, 0, .25);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(15px);
+    visibility: hidden;
+  }
+
+
+  #closeControls {
+    background: var(--colors-transparency-black-trans-5, rgba(0, 0, 0, 0.05));
+    color: white;
+    padding: 10px 20px;
+    bottom: var(--padding);
+
+    border-radius: var(--radiusLg);
+    cursor: pointer;
+    display: block;
+    height: max-content;
+    /* width: max-content; */
+    grid-area: close;
+    justify-content: center;
+  }
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gapSpace);
+  }
+
+  .controls > label:nth-of-type(1) { grid-area: mode; }
+  .controls > label:nth-of-type(2) { grid-area: key; }
+
+  #mode-select,
+  #key-select {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gapSpace);
+    /* justify-content: center; */
+    /* align-items: stretch; */
+    overflow-y: scroll;
+  }
+
+  .mode-button {
+    cursor: pointer;
+    padding: var(--btnPadMd);
+    /* flex: 0 0 auto; */
+    border-radius: var(--radiusLg);
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid rgba(255,255,255,.28);
+  }
+
+  .key-button {
+    cursor: pointer;
+    padding: var(--btnPadMd);
+    border-radius: var(--radiusLg);
+    display: block;
+    /* width: 100%; */
+    box-sizing: border-box;
+    border: 1px solid rgba(255,255,255,.28);
+  }
+
+  .mode-button:hover,
+  .key-button:hover {
+    /* border-color: rgba(255,255,255,.5); */
+  }
+
+  .mode-button:focus-visible,
+  .key-button:focus-visible {
+    outline: 2px solid rgba(255,255,255,.7);
+    outline-offset: 2px;
+  }
+
+  /* Selected/active state (works with either class or aria-pressed) */
+  .mode-button.active,
+  .key-button.active,
+  .mode-button[aria-pressed="true"],
+  .key-button[aria-pressed="true"] {
+    background: white;
+    color: black;
+    border-color: white;
+  }
+
+  .key-button:hover,
+  .mode-button:hover,
+  .scale-note:hover {
+    /* background-color: rgba(255, 255, 255, 0.2);
+    border-radius: var(--radiusLg);
+    mix-blend-mode: normal;
+    color: white; */
+  }
+  
+
+
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Header */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Header */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Header */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Header */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Header */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Header */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Header */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Header */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Header */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Header */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Header */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Header */
+
+#header { 
+  display: grid;
+  grid-template-columns: 1fr 3fr 1fr;
+  gap: 0.75em;      
+  justify-content: center;
+  align-items: start;
+  margin: var(--sectionPadding);
+}
+
+  #scale-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gapSpace);
+  }
+
+#scale-display, #roman-display {
+    /* margin: 0 auto; */ z-index: 3;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(36px, 80px);
+    align-items: baseline;
+    column-gap: var(--gapSpace);
+  }
+
+    .label, .popover-title { font-size: var(--fontSm); background-color: var(--blackTrans1); padding: var(--btnPadSm); border-radius: var(--radiusSm);}
+
+    .scale-note, .roman-display span { white-space: nowrap; border-radius: var(--radiusLg);}
+    
+    .scale-note { font-size: var(--fontLg); padding: 10px 0 10px 0; cursor: pointer; }
+    
+    .active { background-color: white;  color: black;border-radius: var(--radiusLg); mix-blend-mode: lighten;}
+
+    .active_chord, .active_mode-key {
+      align-self: start;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: calc(var(--gapSpace));
+    }
+
+    #active_mode-key, #active_chord.show {
+      height: 48px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .active_chord svg,
+    #active_mode-key svg {
+      background: var(--blackTrans1);
+      color: white;
+      border: none;
+      border-radius: var(--radiusSm);
+      padding: var(--btnPadSm);
+      vertical-align: middle;
+      margin-left: 10px;
+    } 
+    
+    .text { vertical-align: middle;}
+
+@media (max-width: 768px) {
+  #header {
+    z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-areas:
+      "mode  chord"
+      "scale scale";
+    margin: calc(var(--sectionPadding) * 1.5);
+    row-gap: calc(var(--gapSpace) * 1.5);
+  }
+  .active_mode-key { grid-area: mode; }
+  .active_chord { grid-area: chord; }
+  #scale-container { grid-area: scale; }
+
+  .active_chord, .active_mode-key {
+    justify-content: center;
+    align-items: center;
+    gap: 0;
+
+  }
+
+  .active_chord svg,
+    #active_mode-key svg {
+      min-height: 1.25em;
+      min-width: 1.25em;
+    } 
+}
+
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Piano */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Controls */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Controls */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Controls */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Controls */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Controls */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Controls */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Controls */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Controls */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Controls */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Controls */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Controls */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Controls */
+
+/* #pianoSvg {
+} */
+
+#pianoSvg image.scale-highlight {
+  opacity: 1;
+}
+
+#pianoSvg image.chord-highlight {
+  opacity: 1;
+}
+
+#pianoSvg image:not(.scale-highlight):not(.chord-highlight) {
+  opacity: 0.125;
+}
+
 #pianoSvgContainer {
+  height: auto;
+  width: 100%;
+  overflow-x: hidden;
+  z-index: 1;
+}
+
+.scale-highlight,
+.chord-highlight {
+  transition: all 3s ease;
+}
+
+/* #pianoSvgContainer {
   height: auto;
   width: 100%;
   overflow-x: hidden;
@@ -290,159 +425,100 @@ span.scale-note,
   top: 50%;
   transform: translateY(-50%);
   z-index: 1;
-}
+} */
 
-/* ////////////////////////////////////// */
-/*               Piano Ends               */
-/* ////////////////////////////////////// */
-/* /////////////////////////////////////// */
-/*            Chords Inversions            */
-/* /////////////////////////////////////// */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Footer */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Footer */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Footer */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Footer */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Footer */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Footer */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Footer */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Footer */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Footer */
 
-
-/* Footer layout */
+/* Footer layout: two rows. Row 1 = notes across; Row 2 = centered 3 cells */
 #footer {
-  position: fixed;
-  bottom: var(--padding);
-  left: 0;
-  right: 0;
-}
-
-/* Chord notes visibility */
-#chord-notes {
-  display: none;
-}
-
-#chord-notes.show {
+  margin: auto 0;
   display: flex;
-  gap: 2em;
-  padding: var(--btnPadSm);
-  padding-bottom: 0;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 1.25em;
+  flex-direction: column;
+  gap: calc(var(--gapSpace) * 2);
 }
 
-.chord-note {
-  width: 30px;
-  font-size: 20pt;
-  white-space: nowrap;
-}
-
-.inversions {
-  display: none;
-}
-
-.inversions.show,
-.segmented {
-  display: inline-flex;
-  gap: .5em;
-  align-items: center;
-  justify-content: center;
+#chordVar {
   margin: 0 auto;
-  padding: 6px;
-  border-radius: var(--radius);
-  background: rgba(0, 0, 0, 0.125);
+  grid-template-areas: 
+  "num inv pro";
+  display: grid;
+  grid-template-columns: 182px max-content 182px;
+  gap: var(--gapSpace);
+} 
+.segmented {grid-area: num;}
+.inversions {grid-area: inv;}
+#saved-chords-trigger {grid-area: pro; font-size: var(--fontSm);}
+
+.segmented, .inversions.show {
+  margin: 0 auto;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 85px;
+}
+@media (max-width: 768px) {
+  #chordVar {
+      grid-template-columns: 159px max-content 159px;
+  }
+  .segmented, .inversions.show {
+    grid-auto-columns: unset;
+  }
 }
 
-.inversions.show {
-  margin-left: 0.5em;
-}
-
+.inversions,
 .segmented {
-  margin-right: 0.5em;
+  padding: 6px;
+  border-radius: calc(var(--radiusLg) * 1.25);
+  background: var(--blackTrans1);
 }
 
 .inversions [data-inversion].active,
 .segment[aria-pressed="true"] {
   outline: 1px solid currentColor;
-  font-weight: normal;
+  border-radius: var(--radiusLg);
 }
 
-/* Inversion buttons */
+
 .inversions button,
 .segmented button {
-  appearance: none;
-  border: 0;
-  background: none;
-  display: flex;
-  gap: 2em;
-  padding: 8px 16px;
-  align-items: center;
-  border-radius: var(--radius);
-  cursor: pointer;
-  color: var(--Colors-White, #FFF);
-  text-transform: capitalize;
-}
-
-.inversions button:hover,
-.segmented button:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-/* Segmented control */
-/* .segmented {
-  display: inline-flex;
-  overflow: hidden;
-  width: max-content;
-  margin: 0 auto;
-}
-
-.segmented .segment {
-  border: 0;
-  background: none;
-  padding: var(--btnPadSm);
-  font: inherit;
-  cursor: pointer;
-  flex: 1 1 0;
-  white-space: nowrap;
-  border-radius: 0;
+  background: transparent;
+  padding: var(--btnPadMd);
   color: white;
-  opacity: .5;
+  text-transform: capitalize;
   font-size: var(--fontSm);
 
 }
 
-.segmented .segment.active {
-  text-decoration: underline;
-  text-underline-offset: 7px;
-  opacity: 1;
-} */
 
-/* Toggle (JS sets display none/'' already) */
-#footer .chord-type-toggle {
-  display: inline-flex;
-  vertical-align: middle;
-  margin: 0 auto;
-  width: max-content;
+#chord-notes.show {
+  display: flex;
+  gap: 3rem;
+  justify-content: center;
+  align-items: center;
 }
 
-.inv-btn,
-.chord-type-btn {
-  font-size: var(--fontSm);
+.chord-note {
+  font-size: 20pt;
+  white-space: nowrap;
 }
 
-/* //////////////////////////////////////// */
-/*          Chords Inversions Ends          */
-/* //////////////////////////////////////// */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Inversions */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Inversions */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Inversions */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Inversions */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Inversions */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Inversions */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Inversions */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Inversions */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Inversions */
 
-
-.scale-highlight,
-.chord-highlight {
-  transition: all 3s ease;
-}
-
-button,
-.segment,
-.inv-btn {
-  -webkit-tap-highlight-color: transparent;
-  /* removes the flash */
-}
-
-button:focus {
-  outline: none;
-}
 
 .no-matches {
   padding: 8px 10px;
@@ -450,56 +526,25 @@ button:focus {
   opacity: .85;
 }
 
-.chord-match {
-  display: block;
-  width: 100%;
-  text-align: center;
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, .12);
-  background: transparent;
-  color: white;
-  cursor: pointer;
-}
-
 .chord-match:hover {
-  background: rgba(255, 255, 255, .08);
+  /* background: rgba(255, 255, 255, .08); */
 }
 
-#chord-search-btn {
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-
-#chord-search-summary {
-  opacity: .7;
-}
-
-/* Chord search popover (final consolidated) */
 #chord-search-results.chord-search-popover {
   position: fixed;
   display: none;
-  /* JS switches to flex when shown */
-  z-index: 2147483646;
+  z-index: 3;
   top: 0;
   right: 0;
-  padding: 1rem;
-  gap: .75rem;
+  bottom: 0;
+  width: 33vw;
   flex-direction: column;
   flex-wrap: nowrap;
   background: rgba(20, 20, 20, .92);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border-radius: 10px;
+  border-radius: var(--radiusLg);
   box-shadow: 0 8px 24px rgba(0, 0, 0, .35);
-  height: calc(100% - 4rem);
   overflow-y: auto;
   min-width: 25vw;
   margin: 1rem;
@@ -509,351 +554,172 @@ button:focus {
   display: flex;
 }
 
-/* Stacked result buttons */
 #chord-search-results.chord-search-popover .chord-match {
-  display: block;
+  display: flex;
+  justify-content: center;
   width: 100%;
-  text-align: center;
-  padding: 10px;
-  border-radius: 8px;
+  padding: 10px 0;
+  border-radius: var(--radiusLg);
   border: 1px solid rgba(255, 255, 255, .12);
-  background: transparent;
   color: white;
   cursor: pointer;
 }
 
 #chord-search-results.chord-search-popover .chord-match:hover {
-  background: rgba(255, 255, 255, .08);
+  /* background: rgba(255, 255, 255, .08); */
 }
 
 .chord-line {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  /* space between chord text and search */
 }
 
-.acc {
-  display: inline-block;
-  font-size: 0.75em;
-  line-height: 1;
-  vertical-align: super;
+#chord-search-results .popover-title {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: var(--gapSpace);
+  padding: 4px 0;
 }
 
-#scale-display .scale-note {
-  display: inline-block;
-  /* not flex */
-  white-space: nowrap;
-  /* keep letter + accidental together */
-}
-
-/* #scale-display .scale-note {
-  display: inline-flex;
-  flex-direction: row;
-  align-items: baseline;
-  gap: 0;
-  white-space: nowrap;
-} */
-
-.chord-search-popover .popover-title {
-  font-size: var(--fontSm);
-  padding: 1rem .75rem;
-}
-
-.chord-search-popover .popover-content {
+#chord-search-results.chord-search-popover .popover-content {
   display: flex;
   flex-direction: column;
-  gap: .75rem;
+  gap: var(--gapSpace);
 }
 
 #closeChordSearch {
   background: rgba(255, 255, 255, 0.065);
   color: white;
-  padding: 8px 16px;
-  border-radius: .5em;
+  padding: 4px 0;
+  border-radius: var(--radiusSm);
   border: none;
   text-decoration: none !important;
   width: 100%;
   cursor: pointer;
 }
 
-.chord-search-popover .popover-title {
-  display: flex;
-  flex-direction: column-reverse;
-  gap: 25px;
-  align-items: baseline;
-  justify-content: center;
-  align-items: center;
-  padding: 0 0 16px;
-}
-
-/* .popover-heading {
-  text-decoration: underline;
-  text-underline-offset: 7px;
-} */
-
-.chord-search-bar {
-  display: none;
-}
-
-.active_chord svg,
-#active_mode-key svg {
-  background: rgba(0, 0, 0, 0.125);
-  border-radius: .5em;
-  padding: 6px;
-  display: inline-block;
-  vertical-align: middle;
-  position: relative;
-  top: -0.125em;
-  margin-left: 10px;
-  min-width: 16.8px;
-  min-height: 16.8px;
-}
-
-.active_chord {
-  display: none;
-  gap: 0.25em;
-  line-height: 1;
-}
-
-/* Active chord is hidden until JS toggles it */
-.active_chord {
-  display: none;
-}
-
-.active_chord.show {
-  display: flex;
-}
-
-
-/* /////////////////////////// */
-/* /////////////////////////// */
-/* /////////////////////////// */
-/* /////////////////////////// */
-/* /////////////////////////// */
-/* /////////////////////////// */
-/* /////////////////////////// */
-/* /////////////////////////// */
-/* /////////////////////////// */
-/* /////////////////////////// */
-/* /////////////////////////// */
-/* /////////////////////////// */
-/* /////////////////////////// */
-
-@media (max-width: 650px) {
-  :root {
-    --piano-scale: 1;
-  }
-
-  .controls {
-    display: grid;
-    grid-template-columns: 33% 33%;
-    grid-auto-rows: auto;
-    align-items: start;
-    justify-items: center;
-    column-gap: .75rem;
-    padding: var(--padding);
-    overflow-y: auto;
-  }
-
-  #mode-select,
-  #key-select {
-    /* flex-direction: column; */
-    align-items: center;
-    gap: .75em;
-    padding-bottom: 0;
-    width: 100%;
-  }
-
-  .mode-button {
-    padding: var(--btnPad-Mobile);
-    width: -webkit-fill-available;
-    border: 1px solid white;
-  }
-
-  .key-button {
-    border: 1px solid white;
-    width: 100%;
-
-    padding: var(--btnPad-Mobile);
-
-  }
-
-  #closeControls {
-    grid-column: 1 / -1;
-    /* span across both columns */
-    grid-row: 1;
-    justify-self: center;
-    /* center the button */
-    margin-top: .25rem;
-    width: 100%;
-    padding: var(--btnPad-Mobile);
-  }
-
-  #mode-select {
-    grid-row: 2;
-  }
-
-  #key-select {
-    grid-row: 3;
-  }
-
-  .label {
-    margin-bottom: 25px;
-    border-bottom: 0;
-
-  }
-
-  /* ////////// HEADER */
-  #header {
-    margin-top: var(--padding);
-    position: static;
-    left: unset;
-    transform: unset;
-    top: auto;
-    grid-area: header;
-    width: 100%;
-    z-index: 1;
-
-    display: grid;
-    grid-template-columns: 1fr;
-
-    gap: 2.5em;
-  }
-
-  /* ---- Single-column layout for mobile: header, piano, footer ---- */
-  body {
-    display: grid;
-    grid-template-areas:
-      "header"
-      "piano"
-      "footer";
-    align-content: start;
-    row-gap: 2em;
-    height: 100vh;
-  }
-
-  #header .label {
-    text-decoration: none;
-  }
-
-  /* Header at the top of the flow */
-
-  /* Piano container in the middle */
-  #pianoSvgContainer {
-    position: static;
-    /* override absolute */
-    top: auto;
-    transform: none;
-    /* remove translateY centering */
-    grid-area: piano;
-    width: 100%;
-  }
-
-  /* Footer at the bottom of the flow */
-  #footer {
-    position: static;
-    /* override fixed */
-    bottom: auto;
-    grid-area: footer;
-    width: 100%;
-    margin-top: 0.5rem;
-  }
-
-  /* Header active chord container: flex for horizontal alignment (mobile only) */
-  .active_chord.show {
-    display: flex;
-
-  }
-
-  .active_chord .label {
-    display: inline;
-    margin-right: 0.5rem;
-    margin-bottom: 0;
-  }
-
-  /* Active mode/key container: label inline (mobile only) */
-  .active_mode-key {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-  }
-
-  .active_mode-key .label {
-    display: inline;
-    margin-right: 0.5rem;
-    margin-bottom: 0;
-  }
-
-  /* Scale container: label in left column, scale & romans stacked in right column (mobile only) */
-  #scale-container {
-    /* display: grid; */
-    grid-template-columns: auto;
-    grid-auto-rows: auto;
-    column-gap: 0.5rem;
-    align-items: center;
-    padding: 0 var(--padding);
-  }
-
-  #scale-container .label {
-    all: unset;
-    display: none;
-    /* no bottom margin */
-  }
-
-  #scale-display {
-    grid-column: 2;
-    grid-row: 1;
-  }
-
-  #roman-display {
-    grid-column: 2;
-    grid-row: 2;
-  }
-
-  .scale-note,
-  button {
-    padding: var(--btnPad-Mobile) !important;
-  }
-
+@media (max-width: 768px) {
   #chord-search-results.chord-search-popover {
     left: 0;
-  }
-
-  #header>.active_mode-key,
-  #header>.active_chord {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
+    right: 0;
+    width: auto;      /* override desktop width:33vw */
+    min-width: 0;     /* override desktop min-width:25vw */
   }
 }
 
-.scale-note {
-  white-space: nowrap;
-  width: 25px;
+
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Progressions */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Progressions */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Progressions */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Progressions */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Progressions */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Progressions */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Progressions */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Progressions */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Progressions */
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Progressions */
+
+.chord-search-popover.is-open {
+  display: grid;
+  grid-template-columns: 1fr;
+  background-color: var(--blackPopover);
+  gap: var(--gapSpace);
+  padding: var(--sectionPadding);
 }
 
-.roman-display span {
+#saved-chords-popover .popover-title {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gapSpace);
+}
+
+#saved-chords-popover .popover-heading {
+  border-radius: var(--radiusSm);
+  margin-left: 22px;
+}
+
+#saved-chords-content {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-columns: repeat(6, 1fr);
+  gap: var(--gapSpace);
+}
+
+.slot {
+  border: 1px dashed var(--whiteTrans1);
+  border-radius: var(--radiusLg);
+  padding: 8px 8px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto; 
+  align-items: center;
+  column-gap: var(--gapSpace);
+} .slot:has(.filled) {
+  border: none;
+  background-color: white;
+  color: black;
+}
+
+.slot-btn {
+  display: flex;
+  align-items: center;
+  gap: .25em;
+  min-width: 0; 
+  justify-content: center;
+  margin-left: 12px;
+  font-size: var(--fontSm);
+}
+
+.slot-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
-  width: auto;
+}
+
+.slot-inv {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+}
+
+.slot-del {
+  flex: none;
+}
+
+@media (max-width: 768px) {
+  #saved-chords-content {
+  grid-auto-flow: unset;
+  grid-template-columns: repeat(3, 1fr);
+}
+}
+
+/* .slot-btn.filled {
+  background: white;
+  color: black;
+}
+
+
+.progression-slots .slot .slot-del {
+  display: none;
+}
+
+.progression-slots .slot .slot-btn.filled+.slot-del {
   display: inline-flex;
-  /* align-items: baseline; */
-  gap: .15em;
 }
 
-.active_chord { 
-  visibility: hidden;          /* keeps layout height */
-  pointer-events: none; 
-}
+#progression-slots {
+  text-align: left;
+  display: flex;
+  column-gap: 10px;
+} */
 
-/* When a chord is active, show it */
-.active_chord.show { 
-  visibility: visible; 
-  pointer-events: auto; 
-}
 
-/* (Optional) if your label is outside that container, hide it too */
-.active_chord:not(.show) .label {
-  visibility: hidden;
+@media (max-width: 768px) {
+  .controls {
+    padding: 22.5% 5% var(--sectionPadding) 5%;
+  }
 }
