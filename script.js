@@ -467,6 +467,43 @@ function populateChordControls() {
     });
   }
 
+  // -- Sync menu from the currently active chord (if any)
+  function syncFromActiveChord() {
+    if (!Array.isArray(baseChordIDs) || baseChordIDs.length < 3) return;
+
+    const size = getChordSize();
+    const rootRaw = (ID_TO_NOTE[baseChordIDs[0]] || '').replace(/\d+$/, '');
+    const rootDisplay = getDisplaySpelling(rootRaw);
+
+    // Select & store the root
+    chosenRoot = rootDisplay;
+    rootWrap.querySelectorAll('.chord-root-btn').forEach(b => b.classList.remove('active'));
+    const exactBtn = rootWrap.querySelector(`.chord-root-btn[data-root="${rootDisplay}"]`);
+    const enhBtn = ENHARMONIC_MAP[rootDisplay] ? rootWrap.querySelector(`.chord-root-btn[data-root="${ENHARMONIC_MAP[rootDisplay]}"]`) : null;
+    (exactBtn || enhBtn)?.classList.add('active');
+
+    // Populate visible qualities for this root
+    refreshQualityButtonsForRoot(rootDisplay);
+
+    // Compute current quality and preselect it if available
+    const intervals = idsToIntervals(baseChordIDs);
+    let qKey = size === 4 ? classifySeventh(intervals) : classifyTriadExtended(intervals);
+    const allowed = new Set(allQuals);
+
+    qualWrap.querySelectorAll('.chord-quality-btn').forEach(b => b.classList.remove('active'));
+    if (qKey && allowed.has(qKey)) {
+      const qb = qualWrap.querySelector(`.chord-quality-btn[data-quality="${qKey}"]`);
+      if (qb && !qb.hidden && !qb.classList.contains('is-disabled')) {
+        qb.classList.add('active');
+        chosenQuality = qKey;
+      } else {
+        chosenQuality = null;
+      }
+    } else {
+      chosenQuality = null;
+    }
+  }
+
   rootWrap.addEventListener('click', (e) => {
     const btn = e.target.closest('.chord-root-btn');
     if (!btn) return;
@@ -520,6 +557,10 @@ function populateChordControls() {
       const willOpen = !panel.classList.contains('is-open');
       panel.classList.toggle('is-open', willOpen);   // <-- this is what the CSS watches
       openTrigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+      if (willOpen) {
+        // When opening the panel, sync from current active chord and populate visible qualities
+        syncFromActiveChord();
+      }
     });
     openTrigger._boundChordOpen = true;
   }

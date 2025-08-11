@@ -776,7 +776,7 @@ button {
 
 
 @media (max-width: 768px) {
-  .controls {
+  .controls, .Chordcontrols {
     padding: 5% 5% var(--sectionPadding) 5%;
   }
 }
