@@ -750,6 +750,6 @@ button {
 
 @media (max-width: 768px) {
   .controls {
-    padding: 22.5% 5% var(--sectionPadding) 5%;
+    padding: 5% 5% var(--sectionPadding) 5%;
   }
 }
