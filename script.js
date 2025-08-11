@@ -203,22 +203,25 @@ function triadRomanForQuality(baseKey, scalePCs, degreeIndex, quality) {
 
 function seventhRomanForQuality(baseKey, scalePCs, degreeIndex, quality7) {
   // Map the 7th quality to its implied triad flavor
+  // In seventhRomanForQuality(...)
   const triadFlavor =
     quality7 === 'Major7' ? 'Major' :
       quality7 === 'Dominant7' ? 'Major' :
         quality7 === 'Minor7' ? 'Minor' :
-          (quality7 === 'Half-Diminished' || quality7 === 'Diminished7') ? 'Diminished' :
-            (quality7 === 'AugmentedMaj7' || quality7 === 'Augmented7') ? 'Augmented' :
-              'Major';
+          quality7 === 'MinorMaj7' ? 'Minor' : // ← NEW
+            (quality7 === 'Half-Diminished' || quality7 === 'Diminished7') ? 'Diminished' :
+              (quality7 === 'AugmentedMaj7' || quality7 === 'Augmented7') ? 'Augmented' :
+                'Major';
 
-  let baseTriad = triadRomanForQuality(baseKey, scalePCs, degreeIndex, triadFlavor);
+  const baseTriad = triadRomanForQuality(baseKey, scalePCs, degreeIndex, triadFlavor);
 
   switch (quality7) {
     case 'Major7': return baseTriad.replace(/\+$/, '') + 'maj<span class="acc">7</span>';
     case 'Dominant7': return baseTriad.replace(/maj(?![^<]*<\/)/i, '').replace(/\+$/, '') + '<span class="acc">7</span>';
     case 'Minor7': return baseTriad + '<span class="acc">7</span>';
+    case 'MinorMaj7': return baseTriad + '(maj<span class="acc">7</span>)';
     case 'Half-Diminished': return baseTriad.replace('°', 'ø') + '<span class="acc">7</span>';
-    case 'Diminished7': return baseTriad + '°<span class="acc">7</span>';
+    case 'Diminished7': return baseTriad.replace(/°/g, '') + '°<span class="acc">7</span>';
     case 'AugmentedMaj7': return baseTriad.replace(/\+?$/, '+') + 'maj<span class="acc">7</span>';
     case 'Augmented7': return baseTriad.replace(/\+?$/, '+') + '<span class="acc">7</span>';
     default: return baseTriad + '<span class="acc">7</span>';
@@ -292,6 +295,7 @@ const SEVENTH_INTERVALS = {
   Major7: [0, 4, 7, 11],
   Dominant7: [0, 4, 7, 10],
   Minor7: [0, 3, 7, 10],
+  MinorMaj7: [0, 3, 7, 11],
   HalfDiminished: [0, 3, 6, 10],
   Diminished7: [0, 3, 6, 9],
   AugmentedMaj7: [0, 4, 8, 11],
@@ -303,6 +307,7 @@ function classifySeventh(intervals) {
     [JSON.stringify(SEVENTH_INTERVALS.Major7), 'Major7'],
     [JSON.stringify(SEVENTH_INTERVALS.Dominant7), 'Dominant7'],
     [JSON.stringify(SEVENTH_INTERVALS.Minor7), 'Minor7'],
+    [JSON.stringify(SEVENTH_INTERVALS.MinorMaj7), 'MinorMaj7'],
     [JSON.stringify(SEVENTH_INTERVALS.HalfDiminished), 'Half-Diminished'],
     [JSON.stringify(SEVENTH_INTERVALS.Diminished7), 'Diminished7'],
     [JSON.stringify(SEVENTH_INTERVALS.AugmentedMaj7), 'AugmentedMaj7'],
@@ -314,13 +319,14 @@ function classifySeventh(intervals) {
 // Helper to pretty-print seventh chord qualities for display
 function prettySeventhQuality(q7) {
   switch (q7) {
-    case 'Major7': return 'maj7';       // Major triad + major 7th
-    case 'Dominant7': return '7';          // Major triad + minor 7th
-    case 'Minor7': return 'm7';         // Minor triad + minor 7th
-    case 'Half-Diminished': return 'ø7';         // m7♭5 (half-diminished)
-    case 'Diminished7': return '°7';         // fully diminished 7th
-    case 'AugmentedMaj7': return 'maj7♯5';     // augmented triad + major 7th
-    case 'Augmented7': return '7♯5';        // augmented triad + minor 7th (a.k.a. aug7)
+    case 'Major7': return 'maj7';
+    case 'Dominant7': return '7';
+    case 'Minor7': return 'm7';
+    case 'MinorMaj7': return 'm(maj7)';         // ← NEW
+    case 'Half-Diminished': return 'ø7';
+    case 'Diminished7': return '°7';
+    case 'AugmentedMaj7': return 'maj7♯5';
+    case 'Augmented7': return '7♯5';
     default: return '';
   }
 }
@@ -1292,7 +1298,7 @@ function animateScrollX(el, targetLeft, { duration = 350, easing = 'easeInOutQua
 
   const easings = {
     linear: t => t,
-    easeInOutQuad: t => (t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2) / 2),
+    easeInOutQuad: t => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2),
     easeOutCubic: t => 1 - Math.pow(1 - t, 3),
   };
   const ease = easings[easing] || easings.easeInOutQuad;
