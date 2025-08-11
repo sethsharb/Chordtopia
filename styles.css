@@ -469,7 +469,7 @@ button {
 } 
 .segmented {grid-area: num;}
 .inversions {grid-area: inv;}
-#saved-chords-trigger {grid-area: pro; font-size: var(--fontSm);}
+#saved-chords-trigger {grid-area: pro; font-size: var(--fontSm); cursor: pointer;}
 
 .segmented, .inversions.show {
   margin: 0 auto;
@@ -653,6 +653,7 @@ button {
   background-color: var(--blackPopover);
   gap: var(--gapSpace);
   padding: var(--sectionPadding);
+  padding-bottom: 36px;
 }
 
 #saved-chords-popover .popover-title {
