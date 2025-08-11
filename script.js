@@ -389,13 +389,54 @@ function switchToRootAndQuality(rootName, quality) {
       const inferred = (size === 4)
         ? prettySeventhQuality(classifySeventh(intervals) || '')
         : (classifyTriadExtended(intervals) || '');
-      const disp = getDisplaySpelling(rootName);
-      t.innerHTML = inferred ? `${supAcc(disp)} ${inferred}` : supAcc(disp);
-    }
+     const disp = getDisplaySpelling(rootName);
+t.innerHTML = inferred ? `${supAcc(disp)} ${inferred}` : supAcc(disp);
+}
   }
   setChordControlsSelection(rootName, quality);
 }
+// --- Global helpers for Chordcontrols availability & filtering ---
+function degreeSpellsRoot(base, degreeIndex, mode, rootName) {
+  const degCount = getDegreeCountFor(mode);
+  const raw = getScaleNotes(base, mode) || [];
+  const adjusted = adjustEnharmonics(raw, base) || raw;
+  const spelled = adjusted[degreeIndex % degCount];
+  return spelled === rootName;
+}
 
+function qualityExistsForRoot(rootName, quality) {
+  const mode = selectedMode;
+  const rel = intervalsFromQuality(quality);
+  if (!rel) return false;
+  const keys = MODE_KEYS[mode] || DEFAULT_KEYS;
+  for (const base of keys) {
+    const deg = degreeIndexForChordInKey(base, mode, rootName, rel);
+    if (deg !== -1 && degreeSpellsRoot(base, deg, mode, rootName)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function refreshQualityButtonsForRoot(rootName) {
+  const panel = document.querySelector('.Chordcontrols');
+  const qualWrap = panel?.querySelector('#chord-Q-select');
+  if (!qualWrap) return;
+  qualWrap.querySelectorAll('.chord-quality-btn').forEach(btn => {
+    const q = btn.dataset.quality;
+    const ok = qualityExistsForRoot(rootName, q);
+    btn.classList.toggle('is-disabled', !ok);
+    btn.setAttribute('aria-disabled', (!ok).toString());
+    if (!ok) {
+      btn.hidden = true;
+      btn.style.display = 'none';
+      btn.classList.remove('active');
+    } else {
+      btn.hidden = false;
+      btn.style.display = '';
+    }
+  });
+}
 function populateChordControls() {
   const panel = document.querySelector('.Chordcontrols');
   if (panel && !panel.id) panel.id = 'Chordcontrols';
@@ -426,46 +467,9 @@ function populateChordControls() {
   let chosenQuality = null;
 
   // --- Availability helpers (exact spelling) ---
-  function degreeSpellsRoot(base, degreeIndex, mode, rootName) {
-    const degCount = getDegreeCountFor(mode);
-    const raw = getScaleNotes(base, mode) || [];
-    const adjusted = adjustEnharmonics(raw, base) || raw;
-    const spelled = adjusted[degreeIndex % degCount];
-    return spelled === rootName;
-  }
 
-  function qualityExistsForRoot(rootName, quality) {
-    const mode = selectedMode;
-    const rel = intervalsFromQuality(quality);
-    if (!rel) return false;
-    const keys = MODE_KEYS[mode] || DEFAULT_KEYS;
-    for (const base of keys) {
-      const deg = degreeIndexForChordInKey(base, mode, rootName, rel);
-      if (deg !== -1 && degreeSpellsRoot(base, deg, mode, rootName)) {
-        return true;
-      }
-    }
-    return false;
-  }
 
-  function refreshQualityButtonsForRoot(rootName) {
-    // Toggle visibility based on whether an exact-spelling diatonic match exists
-    qualWrap.querySelectorAll('.chord-quality-btn').forEach(btn => {
-      const q = btn.dataset.quality;
-      const ok = qualityExistsForRoot(rootName, q);
-      btn.classList.toggle('is-disabled', !ok);
-      btn.setAttribute('aria-disabled', (!ok).toString());
-      // Hide when not available; show when available
-      if (!ok) {
-        btn.hidden = true;
-        btn.style.display = 'none';
-        if (btn.classList.contains('active')) btn.classList.remove('active');
-      } else {
-        btn.hidden = false;
-        btn.style.display = '';
-      }
-    });
-  }
+
 
   // -- Sync menu from the currently active chord (if any)
   function syncFromActiveChord() {
@@ -1020,8 +1024,10 @@ function getChordSize() {
 
 function buildChordIDs(scaleIDs, startIndex, chordSize) {
   const ids = [];
+  const n = Array.isArray(scaleIDs) ? scaleIDs.length : 0;
+  if (!n) return ids;
   for (let k = 0; k < chordSize; k++) {
-    ids.push(scaleIDs[startIndex + 2 * k]);
+    ids.push(scaleIDs[(startIndex + 2 * k) % n]);
   }
   return ids;
 }
@@ -1293,7 +1299,7 @@ function resetChordDisplay() {
   activeScaleNote = null;
   baseChordIDs = [];
   lastClickedScaleId = null;
-  chordNotesDiv.textContent = '';
+  if (chordNotesDiv) chordNotesDiv.textContent = '';
   const chordDisplay = document.getElementById('active_chord');
   if (chordDisplay) {
     const t = chordDisplay.querySelector('.text');
@@ -1557,6 +1563,13 @@ function switchToKeyModeAndDegree(base, mode, degree, preservedChordIDs = null, 
       }
     }
   }
+  // When panel is open, re-filter qualities for the current chord root
+const panel = document.querySelector('.Chordcontrols');
+if (panel && panel.classList.contains('is-open') && Array.isArray(baseChordIDs) && baseChordIDs.length) {
+  const rootRaw = (ID_TO_NOTE[baseChordIDs[0]] || '').replace(/\d+$/, '');
+  const rootDisplay = getDisplaySpelling(rootRaw);
+  refreshQualityButtonsForRoot(rootDisplay);
+}
   syncChordControlsFromCurrent();
 }
 
@@ -1881,6 +1894,13 @@ function update() {
       const t = chordDisplay.querySelector('.text');
       if (t) t.innerHTML = `${supAcc(getDisplaySpelling(base))} ${quality}`;
     }
+    // If the Chordcontrols panel is open, re-filter qualities for this root and re-sync highlights
+const panel = document.querySelector('.Chordcontrols');
+if (panel && panel.classList.contains('is-open')) {
+  const rootDisplay = getDisplaySpelling(note.replace(/\d+$/, ''));
+  refreshQualityButtonsForRoot(rootDisplay);
+  syncChordControlsFromCurrent();
+}
 
     // If slots are visible, refresh their button labels that might include quality text length considerations
     document.getElementById('progression-slots') && Array.from({ length: MAX_SLOTS }, (_, i) => updateProgressionSlotButton(i));
@@ -1968,7 +1988,7 @@ function populateModesOnce() {
 function updateKeyOptions(mode) {
   keySelect.innerHTML = '';
 
-  const validKeys = MODE_KEYS[selectedMode] || DEFAULT_KEYS;
+const validKeys = MODE_KEYS[mode] || DEFAULT_KEYS;
   validKeys.forEach(base => {
 
     let matching = Object.keys(NOTE_MAP).find(n => n === base + '4') ||
