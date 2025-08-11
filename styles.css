@@ -500,6 +500,10 @@ button {
   #saved-chords-trigger[aria-expanded="true"] {
     display: none;
   }
+
+  .inversions button, .segmented button {
+    padding: 6px 10px !important;
+  }
 }
 
 .inversions,
