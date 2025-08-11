@@ -1,6 +1,6 @@
 @font-face {
   font-family: 'SF Pro';
-  src: url('fonts/SF-Pro.ttf') format('ttf');
+  src: url('fonts/SF-Pro.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
 }
@@ -98,8 +98,27 @@ button {
   --blackPopover: rgba(20,20,20,.9);
 }
 
-@media (max-width: 768px) {:root { --piano-scale: 1; }}
+@media (max-width: 768px) {:root { --piano-scale: 1; } body {grid-template-rows: auto auto 1fr auto !important;}}
 @media (max-height: 721px) {:root { --piano-scale: .75; }}
+
+
+
+html, body { height: 100%; }
+body { min-height: 100svh; }         /* stable */
+@supports (height: 100dvh) {
+  body { min-height: 100dvh; }       /* best when supported */
+}
+:root {
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
+}
+.header { padding-top: var(--safe-top); }
+.footer { padding-bottom: var(--safe-bottom); }
+
+:root { --safe-bottom: env(safe-area-inset-bottom); }
+body { padding-bottom: var(--safe-bottom); }
+
+
 
 body {
   display: grid;
@@ -111,8 +130,8 @@ body {
     "footer"
     "saved";
   margin: 0;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100svh;
 
   font-family: 'SF Pro', Roboto, sans-serif; font-weight: normal;
   font-size: var(--fontReg);
@@ -122,8 +141,9 @@ body {
   color: #ffffff;
   transition: background 0.5s ease;
 
-  overflow: hidden;
-}
+overflow-x: hidden;
+overflow-y: auto;}
+
 #header {grid-area: header;}
 #pianoSvgContainer {grid-area: piano;}
 #footer {grid-area: footer;}
@@ -243,11 +263,6 @@ button {
     border: 1px solid rgba(255,255,255,.28);
   }
 
-  .mode-button:hover,
-  .key-button:hover {
-    /* border-color: rgba(255,255,255,.5); */
-  }
-
   .mode-button:focus-visible,
   .key-button:focus-visible {
     outline: 2px solid rgba(255,255,255,.7);
@@ -262,15 +277,6 @@ button {
     background: white;
     color: black;
     border-color: white;
-  }
-
-  .key-button:hover,
-  .mode-button:hover,
-  .scale-note:hover {
-    /* background-color: rgba(255, 255, 255, 0.2);
-    border-radius: var(--radiusLg);
-    mix-blend-mode: normal;
-    color: white; */
   }
   
 
@@ -304,12 +310,16 @@ button {
   }
 
 #scale-display, #roman-display {
-    /* margin: 0 auto; */ z-index: 3;
+    margin: 0 auto; z-index: 3;
     display: grid;
     grid-auto-flow: column;
     grid-auto-columns: minmax(36px, 80px);
     align-items: baseline;
     column-gap: var(--gapSpace);
+    justify-content: center;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(15px);
+    border-radius: var(--radiusLg);
   }
 
     .label, .popover-title { font-size: var(--fontSm); background-color: var(--blackTrans1); padding: var(--btnPadSm); border-radius: var(--radiusSm);}
@@ -374,6 +384,10 @@ button {
       min-height: 1.25em;
       min-width: 1.25em;
     } 
+
+    .scale-note {
+      padding: 6px;
+    }
 }
 
 /* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// Piano */
@@ -464,11 +478,27 @@ button {
   grid-auto-columns: 85px;
 }
 @media (max-width: 768px) {
+  :root {
+    --sectionPadding: 16px;
+  }
+  #footer {
+    gap: var(--gapSpace);
+  }
+
   #chordVar {
-      grid-template-columns: 159px max-content 159px;
+    grid-template-areas: 
+    "num inv"
+    "pro pro";
+    display: grid;
+    grid-template-columns:  max-content max-content;
+      
   }
   .segmented, .inversions.show {
     grid-auto-columns: unset;
+  }
+
+  #saved-chords-trigger[aria-expanded="true"] {
+    display: none;
   }
 }
 
@@ -526,10 +556,6 @@ button {
   opacity: .85;
 }
 
-.chord-match:hover {
-  /* background: rgba(255, 255, 255, .08); */
-}
-
 #chord-search-results.chord-search-popover {
   position: fixed;
   display: none;
@@ -565,9 +591,6 @@ button {
   cursor: pointer;
 }
 
-#chord-search-results.chord-search-popover .chord-match:hover {
-  /* background: rgba(255, 255, 255, .08); */
-}
 
 .chord-line {
   display: flex;
@@ -656,6 +679,9 @@ button {
   grid-template-columns: minmax(0, 1fr) auto; 
   align-items: center;
   column-gap: var(--gapSpace);
+  max-height: 1em;
+  align-content: center;
+
 } .slot:has(.filled) {
   border: none;
   background-color: white;
