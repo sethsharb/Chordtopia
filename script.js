@@ -302,6 +302,237 @@ const SEVENTH_INTERVALS = {
   Augmented7: [0, 4, 8, 10],
 };
 
+// --- Chord Builder (Root + Quality) ---
+const QUALITIES_TRIAD = ['Major', 'Minor', 'Diminished', 'Augmented'];
+const QUALITIES_SEVENTH = ['Major7', 'Dominant7', 'Minor7', 'MinorMaj7', 'Half-Diminished', 'Diminished7', 'AugmentedMaj7', 'Augmented7'];
+
+function chordSizeFromQuality(q) {
+  return /7$/.test(q) || q === 'Half-Diminished' || q === 'Diminished7' || q === 'Augmented7' || q === 'AugmentedMaj7' || q === 'MinorMaj7' || q === 'Major7' || q === 'Dominant7' || q === 'Minor7' ? 4 : 3;
+}
+
+function intervalsFromQuality(q) {
+  // Return relative intervals from the chord root
+  if (TRIAD_INTERVALS[q]) return TRIAD_INTERVALS[q];
+  if (q === 'Half-Diminished') return SEVENTH_INTERVALS.HalfDiminished; // name mismatch bridge
+  return SEVENTH_INTERVALS[q] || null;
+}
+
+// Find the degree index (0..degCount-1) in a given key/mode where a chord with given root and intervals occurs diatonically
+function degreeIndexForChordInKey(baseKey, modeName, rootName, relIntervals) {
+  const scalePCs = getScalePitchClasses(baseKey, modeName);
+  const degCount = getDegreeCountFor(modeName);
+  if (!Array.isArray(scalePCs) || scalePCs.length !== degCount) return -1;
+
+  // Determine the degree whose pitch class equals the chosen root
+  const rootPc = toPitchClass(rootName);
+  if (rootPc == null || rootPc === -1) return -1;
+
+  for (let degree = 0; degree < degCount; degree++) {
+    // Match root on scale first
+    const pcAtDegree = scalePCs[degree];
+    if (pcAtDegree !== rootPc) continue;
+
+    const size = relIntervals.length;
+    const cand = scaleIntervalsAtDegree(scalePCs, degree, size);
+    if (JSON.stringify(cand) === JSON.stringify(relIntervals)) return degree;
+  }
+  return -1;
+}
+
+// Choose a key within the CURRENT mode that contains the chord; if current key already contains it, keep it.
+function chooseKeyForChord(rootName, quality) {
+  const mode = selectedMode;
+  const rel = intervalsFromQuality(quality);
+  if (!rel) return null;
+
+  // If current key already works, prefer it
+  const currentBase = selectedKey ? selectedKey.slice(0, -1) : null;
+  if (currentBase) {
+    const deg = degreeIndexForChordInKey(currentBase, mode, rootName, rel);
+    if (deg !== -1) return { base: currentBase, degree: deg };
+  }
+
+  const keys = MODE_KEYS[mode] || DEFAULT_KEYS;
+  for (const base of keys) {
+    const deg = degreeIndexForChordInKey(base, mode, rootName, rel);
+    if (deg !== -1) return { base, degree: deg };
+  }
+  return null;
+}
+
+// Switch the app to show the selected chord (root + quality) in the current mode, choosing a key that contains it
+function switchToRootAndQuality(rootName, quality) {
+  const rel = intervalsFromQuality(quality);
+  if (!rel) return;
+
+  const pick = chooseKeyForChord(rootName, quality);
+  if (!pick) return; // chord not diatonic anywhere in this mode
+
+  // Ensure UI chord size matches quality
+  setChordTypeUI(chordSizeFromQuality(quality) === 4 ? 'seventh' : 'triad');
+
+  // Build the exact chord IDs at that degree so the label will infer correctly
+  const scalePCs = getScalePitchClasses(pick.base, selectedMode);
+  const degCount = getDegreeCountFor(selectedMode);
+  const size = chordSizeFromQuality(quality);
+
+  // Switch key/mode/degree (will rebuild IDs)
+  switchToKeyModeAndDegree(pick.base, selectedMode, pick.degree, null, null);
+
+  // After switch, ensure the active label matches the chosen root spelling if possible
+  const chordDisplay = document.getElementById('active_chord');
+  if (chordDisplay) {
+    const t = chordDisplay.querySelector('.text');
+    if (t) {
+      // Re-infer from IDs to keep enharmonics consistent with scale spelling
+      const intervals = idsToIntervals(baseChordIDs);
+      const inferred = (size === 4)
+        ? prettySeventhQuality(classifySeventh(intervals) || '')
+        : (classifyTriadExtended(intervals) || '');
+      const disp = getDisplaySpelling(rootName);
+      t.innerHTML = inferred ? `${supAcc(disp)} ${inferred}` : supAcc(disp);
+    }
+  }
+  setChordControlsSelection(rootName, quality);
+}
+
+function populateChordControls() {
+  const panel = document.querySelector('.Chordcontrols');
+  if (panel && !panel.id) panel.id = 'Chordcontrols';
+  if (!panel) return;
+
+  const rootWrap = panel.querySelector('#root-select');
+  const qualWrap = panel.querySelector('#chord-Q-select');
+  if (!rootWrap || !qualWrap) return;
+
+  // Build root buttons: show both enharmonic spellings as separate selectable options
+  const ordered = [
+    ['C'], ['C♯', 'D♭'], ['D'], ['D♯', 'E♭'], ['E', 'F♭'], ['F', 'E♯'], ['F♯', 'G♭'], ['G'], ['G♯', 'A♭'], ['A'], ['A♯', 'B♭'], ['B', 'C♭']
+  ];
+
+  rootWrap.innerHTML = ordered.map(names => {
+    return names.map(n => `<div class="chord-root-btn" data-root="${n}">${supAcc(n)}</div>`).join('');
+  }).join('');
+
+  // Build quality buttons (triads + sevenths)
+  const pretty = {
+    'Major': 'Maj', 'Minor': 'm', 'Diminished': '°', 'Augmented': '+',
+    'Major7': 'maj7', 'Dominant7': '7', 'Minor7': 'm7', 'MinorMaj7': 'm(maj7)',
+    'Half-Diminished': 'ø7', 'Diminished7': '°7', 'AugmentedMaj7': 'maj7♯5', 'Augmented7': '7♯5'
+  };
+  const allQuals = QUALITIES_TRIAD.concat(QUALITIES_SEVENTH);
+  qualWrap.innerHTML = allQuals.map(q => `<div class="chord-quality-btn" data-quality="${q}">${pretty[q] || q}</div>`).join('');
+  let chosenRoot = null;
+  let chosenQuality = null;
+
+  // --- Availability helpers (exact spelling) ---
+  function degreeSpellsRoot(base, degreeIndex, mode, rootName) {
+    const degCount = getDegreeCountFor(mode);
+    const raw = getScaleNotes(base, mode) || [];
+    const adjusted = adjustEnharmonics(raw, base) || raw;
+    const spelled = adjusted[degreeIndex % degCount];
+    return spelled === rootName;
+  }
+
+  function qualityExistsForRoot(rootName, quality) {
+    const mode = selectedMode;
+    const rel = intervalsFromQuality(quality);
+    if (!rel) return false;
+    const keys = MODE_KEYS[mode] || DEFAULT_KEYS;
+    for (const base of keys) {
+      const deg = degreeIndexForChordInKey(base, mode, rootName, rel);
+      if (deg !== -1 && degreeSpellsRoot(base, deg, mode, rootName)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function refreshQualityButtonsForRoot(rootName) {
+    // Toggle visibility based on whether an exact-spelling diatonic match exists
+    qualWrap.querySelectorAll('.chord-quality-btn').forEach(btn => {
+      const q = btn.dataset.quality;
+      const ok = qualityExistsForRoot(rootName, q);
+      btn.classList.toggle('is-disabled', !ok);
+      btn.setAttribute('aria-disabled', (!ok).toString());
+      // Hide when not available; show when available
+      if (!ok) {
+        btn.hidden = true;
+        btn.style.display = 'none';
+        if (btn.classList.contains('active')) btn.classList.remove('active');
+      } else {
+        btn.hidden = false;
+        btn.style.display = '';
+      }
+    });
+  }
+
+  rootWrap.addEventListener('click', (e) => {
+    const btn = e.target.closest('.chord-root-btn');
+    if (!btn) return;
+    rootWrap.querySelectorAll('.chord-root-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    chosenRoot = btn.dataset.root;
+
+    // Update which qualities are available for this exact-spelled root
+    refreshQualityButtonsForRoot(chosenRoot);
+
+    // If a previously chosen quality is now invalid, clear it
+    if (chosenQuality) {
+      const chosenBtn = qualWrap.querySelector(`.chord-quality-btn[data-quality="${chosenQuality}"]`);
+      if (chosenBtn && chosenBtn.classList.contains('is-disabled')) {
+        chosenQuality = null;
+      }
+    }
+
+    if (chosenRoot && chosenQuality) {
+      switchToRootAndQuality(chosenRoot, chosenQuality);
+    }
+  });
+
+  qualWrap.addEventListener('click', (e) => {
+    const btn = e.target.closest('.chord-quality-btn');
+    if (!btn || btn.classList.contains('is-disabled')) return;
+    qualWrap.querySelectorAll('.chord-quality-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    chosenQuality = btn.dataset.quality;
+    if (chosenRoot && chosenQuality) switchToRootAndQuality(chosenRoot, chosenQuality);
+  });
+
+  // Open/close behavior mirroring .controls
+  const closeBtn = panel.querySelector('#closeControls');
+  if (closeBtn && !closeBtn._boundChordClose) {
+    closeBtn.addEventListener('click', () => { panel.classList.remove('is-open'); });
+    closeBtn._boundChordClose = true;
+  }
+
+  // If an opener exists with id #openChordControls, wire it. Otherwise, allow clicking the #active_chord label to open as a fallback.
+  // If an opener exists with id #openChordControls, wire it. Fallback to #active_chord.
+  const openTrigger = document.getElementById('openChordControls') || document.getElementById('active_chord');
+  if (openTrigger && !openTrigger._boundChordOpen) {
+    // ARIA hookups (optional but nice)
+    if (panel && panel.id) {
+      openTrigger.setAttribute('aria-controls', panel.id);
+      openTrigger.setAttribute('aria-expanded', panel.classList.contains('is-open') ? 'true' : 'false');
+    }
+    openTrigger.addEventListener('click', (e) => {
+      e.preventDefault();
+      const willOpen = !panel.classList.contains('is-open');
+      panel.classList.toggle('is-open', willOpen);   // <-- this is what the CSS watches
+      openTrigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+    });
+    openTrigger._boundChordOpen = true;
+  }
+
+  // Initial state: hide all qualities until a root is chosen
+  qualWrap.querySelectorAll('.chord-quality-btn').forEach(btn => {
+    btn.classList.add('is-disabled');
+    btn.setAttribute('aria-disabled', 'true');
+    btn.hidden = true;
+    btn.style.display = 'none';
+  });
+}
+
 function classifySeventh(intervals) {
   const dict = new Map([
     [JSON.stringify(SEVENTH_INTERVALS.Major7), 'Major7'],
@@ -901,6 +1132,50 @@ function getDisplaySpelling(base) {
   const enh = ENHARMONIC_MAP[base];
   return (enh && scaleSet.has(enh)) ? enh : base;
 }
+// --- Chordcontrols syncing helpers ---
+function setChordControlsSelection(rootBase, qualityKey) {
+  const panel = document.querySelector('.Chordcontrols');
+  if (!panel) return;
+
+  const rootWrap = panel.querySelector('#root-select');
+  const qualWrap = panel.querySelector('#chord-Q-select');
+
+  // Root: try exact spelling first, then enharmonic
+  if (rootWrap && rootBase) {
+    rootWrap.querySelectorAll('.chord-root-btn').forEach(b => b.classList.remove('active'));
+    const a = rootWrap.querySelector(`.chord-root-btn[data-root="${rootBase}"]`);
+    const enh = ENHARMONIC_MAP[rootBase];
+    const b = enh ? rootWrap.querySelector(`.chord-root-btn[data-root="${enh}"]`) : null;
+    (a || b)?.classList.add('active');
+  }
+
+  // Quality
+  if (qualWrap) {
+    qualWrap.querySelectorAll('.chord-quality-btn').forEach(b => b.classList.remove('active'));
+    if (qualityKey) {
+      const q = qualWrap.querySelector(`.chord-quality-btn[data-quality="${qualityKey}"]`);
+      q?.classList.add('active');
+    }
+  }
+}
+
+function syncChordControlsFromCurrent() {
+  if (!Array.isArray(baseChordIDs) || baseChordIDs.length < 3) return;
+  const size = getChordSize();
+  const rootName = (ID_TO_NOTE[baseChordIDs[0]] || '').replace(/\d+$/, '');
+  const intervals = idsToIntervals(baseChordIDs);
+  let q = size === 4 ? classifySeventh(intervals) : classifyTriadExtended(intervals);
+
+  // Only highlight qualities present in the popover
+  const allowed = new Set([
+    'Major', 'Minor', 'Diminished', 'Augmented',
+    'Major7', 'Dominant7', 'Minor7', 'MinorMaj7',
+    'Half-Diminished', 'Diminished7', 'AugmentedMaj7', 'Augmented7'
+  ]);
+  if (!allowed.has(q)) q = null;
+
+  setChordControlsSelection(rootName, q);
+}
 function qualityFromRoman(roman) {
   if (roman) {
     if (roman.includes('°')) return 'Diminished';
@@ -960,7 +1235,7 @@ function samePCSet(a, b) {
 
 function updateChordVisibility() {
   const show = baseChordIDs.length >= 3;
-  document.querySelector('#chord-notes')?.classList.toggle('show', show);
+  document.querySelector('.chorddisplay')?.classList.toggle('show', show);
   document.querySelector('.inversions')?.classList.toggle('show', show);
   document.querySelector('#active_chord')?.classList.toggle('show', show);
 
@@ -993,10 +1268,10 @@ function renderChordSearchUI() {
   const results = document.getElementById('chord-search-results');
   if (!results) return;
 
-  const activeChordEl = document.getElementById('active_chord');
+  const searchTriggerEl = document.querySelector('.chorddisplay svg');
 
   function hidePopover(ev) {
-    if (ev && (results.contains(ev.target) || (activeChordEl && activeChordEl.contains(ev.target)))) return;
+    if (ev && (results.contains(ev.target) || (searchTriggerEl && searchTriggerEl.contains(ev.target)))) return;
     results.classList.remove('is-open');
     const pianoContainer = document.getElementById('pianoSvgContainer');
     if (pianoContainer) pianoContainer.style.pointerEvents = '';
@@ -1034,9 +1309,9 @@ function renderChordSearchUI() {
     results.style.display = '';
     results.classList.add('is-open');
 
-    // Optional: position near the active chord label
-    if (activeChordEl) {
-      const rect = activeChordEl.getBoundingClientRect();
+    // Optional: position near the chord notes area
+    if (searchTriggerEl) {
+      const rect = searchTriggerEl.getBoundingClientRect();
       const viewportPadding = 8;
       const maxH = window.innerHeight - 2 * viewportPadding;
       const contentH = Math.min(results.scrollHeight, maxH);
@@ -1087,15 +1362,10 @@ function renderChordSearchUI() {
     }
   }
 
-  // Make the active chord label act as the trigger
-  if (activeChordEl) {
-    activeChordEl.style.cursor = 'pointer';
-    // Also set pointer cursor for the active_mode-key element
-    const activeModeKeyEl = document.getElementById('active_mode-key');
-    if (activeModeKeyEl) {
-      activeModeKeyEl.style.cursor = 'pointer';
-    }
-    activeChordEl.addEventListener('click', openPopover);
+  // Make the chord notes area act as the search trigger
+  if (searchTriggerEl) {
+    searchTriggerEl.style.cursor = 'pointer';
+    searchTriggerEl.addEventListener('click', openPopover);
   }
 }
 function transposeChordIDs(ids, oldRootId, newRootId) {
@@ -1179,11 +1449,13 @@ function switchToKeyModeAndDegree(base, mode, degree, preservedChordIDs = null, 
   applyBackground(null, getKeyBackground(base), '#8BEB83');
 
 
-  document.querySelectorAll('.mode-button').forEach(b => {
+  // Scope to the mode picker only (avoid touching Chord Quality buttons)
+  document.querySelectorAll('#mode-select .mode-button').forEach(b => {
     const on = b.dataset.mode === mode;
     b.classList.toggle('active', on);
   });
-  document.querySelectorAll('.key-button').forEach(b => {
+  // Scope to the key picker only (avoid touching Root Note buttons in the chord panel)
+  document.querySelectorAll('#key-select .key-button').forEach(b => {
     const on = b.textContent.trim() === base;
     b.classList.toggle('active', on);
   });
@@ -1244,7 +1516,7 @@ function switchToKeyModeAndDegree(base, mode, degree, preservedChordIDs = null, 
       }
     }
   }
-
+  syncChordControlsFromCurrent();
 }
 
 const keySelect = document.getElementById('key-select');
@@ -1576,6 +1848,8 @@ function update() {
     const using7b = getChordSize() === 4;
     const gen2 = generateRomanSet(selectedKey.slice(0, -1), selectedMode, using7b ? 4 : 3);
     romanDisplay.innerHTML = gen2.map(n => `<span>${n}</span>`).join('');
+    // Keep chord controls (root + quality) highlighted for the new selection
+    syncChordControlsFromCurrent();
   };
   const controls = document.querySelector('.controls');
   const activeDisplay = document.getElementById('active_mode-key');
@@ -1633,7 +1907,7 @@ function populateModesOnce() {
     btn.dataset.mode = m;
     btn.classList.add('mode-button');
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.mode-button').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('#mode-select .mode-button').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       selectedMode = m;
       resetChordDisplay();
@@ -1681,7 +1955,7 @@ function updateKeyOptions(mode) {
   if (!selectedKey) selectedKey = 'C4';
 
   const selectedBase = selectedKey.slice(0, -1);
-  const defaultBtn = Array.from(document.querySelectorAll('.key-button'))
+  const defaultBtn = Array.from(document.querySelectorAll('#key-select .key-button'))
     .find(btn => btn.textContent === selectedBase);
   if (defaultBtn) defaultBtn.classList.add('active');
 }
@@ -1743,6 +2017,7 @@ populateModesOnce();
 updateKeyOptions(selectedMode);
 update();
 renderProgressionSlots();
+populateChordControls();
 
 (function initBackground() {
   const base = (typeof selectedKey === 'string') ? selectedKey.slice(0, -1) : 'C';
