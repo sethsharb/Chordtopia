@@ -183,7 +183,7 @@ button {
     position: fixed;
     left: 0;  right: 0;  top: 0;  bottom: 0;
     z-index: 2;
-    padding-top: 22.5%;
+    padding-top: 22.5svh;
     padding: 22.5% 20% var(--sectionPadding) 20%;
 
     display: grid;
