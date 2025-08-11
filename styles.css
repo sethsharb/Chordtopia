@@ -726,6 +726,10 @@ button {
   grid-auto-flow: unset;
   grid-template-columns: repeat(3, 1fr);
 }
+
+.slot-inv {
+  display: none;
+}
 }
 
 /* .slot-btn.filled {
