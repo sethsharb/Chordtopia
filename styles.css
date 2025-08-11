@@ -606,7 +606,7 @@ button {
   display: flex;
   flex-direction: column-reverse;
   gap: var(--gapSpace);
-  padding: 4px 0;
+  padding: 4px 0 0 0;
 }
 
 #chord-search-results.chord-search-popover .popover-content {
