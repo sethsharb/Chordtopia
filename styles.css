@@ -99,7 +99,7 @@ button {
 }
 
 @media (max-width: 768px) {:root { --piano-scale: 1; } body {grid-template-rows: auto auto 1fr auto !important;}}
-@media (max-height: 721px) {:root { --piano-scale: .65; }}
+@media (max-height: 721px) {:root { --piano-scale: .55; }}
 
 
 
